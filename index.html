@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Bitácora Agrícola">
+<meta name="theme-color" content="#14532d">
+<title>Bitácora Agrícola</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config = {
+  darkMode: 'class',
+  theme: { extend: {
+    fontFamily: { display: ['"DIN Condensed"', '"Avenir Next Condensed"', '"Roboto Condensed"', '"Arial Narrow"', 'sans-serif'] },
+    colors: {
+      stone: { 50: '#FAFBF6', 100: '#F2F5EA', 200: '#E2E8D6', 300: '#C8D1B8', 400: '#98A58A', 500: '#66755B', 600: '#46553F', 700: '#2F3D2B', 800: '#1E2C1F', 900: '#13241A', 950: '#0B1510' },
+      green: { 50: '#E8F5EC', 100: '#C9E8D2', 200: '#9AD3AE', 300: '#62B882', 400: '#4CC27A', 500: '#1B8A4D', 600: '#0F7640', 700: '#0B6236', 800: '#084F2C', 900: '#063A21', 950: '#03230F' },
+      amber: { 50: '#FFF8DC', 100: '#FFEFA8', 200: '#FFE06B', 300: '#FFD13D', 400: '#FFC21A', 500: '#F0AA00', 600: '#C98700', 700: '#9A6700', 800: '#6F4A00', 900: '#4D3300', 950: '#2A1B00' },
+      sky: { 50: '#E7F2FF', 100: '#CCE3FF', 200: '#9CC8FA', 300: '#62A8F0', 400: '#2F89E3', 500: '#0F70D4', 600: '#0A5CB4', 700: '#0A4C95', 800: '#083E7A', 900: '#072F5C', 950: '#041C38' },
+      red: { 50: '#FFEDEA', 100: '#FFD6D0', 200: '#FFB0A5', 300: '#FF8272', 400: '#F0705F', 500: '#DC4130', 600: '#C1281A', 700: '#A31F13', 800: '#86190F', 900: '#65140D', 950: '#380906' },
+    },
+  } },
+};</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script src="https://unpkg.com/lucide@1.77.0/dist/umd/lucide.min.js"></script>
+<style>
+  :root { --ink: #13241A; --ticket: #FBFBF4; }
+  html, body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif; background: #F2F5EA; color: #13241A; }
+  html.dark body { background: #0B1510; color: #EEF3E4; }
+  h1, h2, h3, .font-display { font-family: "DIN Condensed", "Avenir Next Condensed", "Roboto Condensed", "Arial Narrow", sans-serif; letter-spacing: 0.01em; }
+  h3.text-lg { font-size: 1.5rem; line-height: 1.1; font-weight: 700; }
+  h3.text-xl { font-size: 1.6rem; line-height: 1.1; }
+  input, select, textarea { font-size: 16px; }
+  .safe-top { padding-top: max(env(safe-area-inset-top), 12px); }
+  .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 10px); }
+  .noscrollbar::-webkit-scrollbar { display: none; }
+  .noscrollbar { scrollbar-width: none; }
+
+  /* Etiqueta de costal: bordes de tinta y sombra dura, legibles bajo el sol */
+  .card { box-shadow: 0 4px 0 var(--ink); }
+  html.dark .card { box-shadow: 0 4px 0 #000; }
+  .btn3d { box-shadow: 0 4px 0 var(--ink); transition: transform .06s, box-shadow .06s; }
+  .btn3d-sm { box-shadow: 0 2px 0 var(--ink); transition: transform .06s, box-shadow .06s; }
+  html.dark .btn3d, html.dark .btn3d-sm { box-shadow: 0 4px 0 #000; }
+  html.dark .btn3d-sm { box-shadow: 0 2px 0 #000; }
+  .btn3d:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+  .btn3d-sm:active { transform: translateY(1px); box-shadow: 0 1px 0 var(--ink); }
+
+  /* Tarjetas principales con surcos */
+  .hero { position: relative; overflow: hidden; box-shadow: 0 5px 0 var(--ink); }
+  html.dark .hero { box-shadow: 0 5px 0 #000; }
+  .hero-furrows { position: absolute; inset: 0; pointer-events: none; }
+  .furrows-light { background: repeating-linear-gradient(104deg, rgba(255,255,255,.09) 0 3px, transparent 3px 20px); }
+  .furrows-dark { background: repeating-linear-gradient(104deg, rgba(19,36,26,.10) 0 3px, transparent 3px 20px); }
+
+  /* Boleta de báscula */
+  .ticket-wrap { filter: drop-shadow(1.5px 0 0 var(--ink)) drop-shadow(-1.5px 0 0 var(--ink)) drop-shadow(0 -1.5px 0 var(--ink)) drop-shadow(0 1.5px 0 var(--ink)) drop-shadow(0 4px 0 var(--ink)); }
+  html.dark .ticket-wrap { filter: drop-shadow(1.5px 0 0 #000) drop-shadow(-1.5px 0 0 #000) drop-shadow(0 -1.5px 0 #000) drop-shadow(0 1.5px 0 #000) drop-shadow(0 4px 0 #000); }
+  .ticket { position: relative; background: var(--ticket); border-radius: 1.1rem 1.1rem 0 0; padding: 1rem 1rem .75rem; color: var(--ink); }
+  .ticket-edge { height: 10px; background: linear-gradient(135deg, var(--ticket) 25%, transparent 25%) -5px 0, linear-gradient(225deg, var(--ticket) 25%, transparent 25%) -5px 0; background-size: 10px 10px; }
+  .dash { border-top: 2px dashed rgba(19,36,26,.4); }
+  .stamp { display: inline-block; margin-right: 4px; transform: rotate(-8deg); border: 3px double currentColor; border-radius: 6px; padding: 1px 9px; font-family: "DIN Condensed", "Avenir Next Condensed", "Roboto Condensed", "Arial Narrow", sans-serif; font-weight: 800; font-size: 21px; letter-spacing: .08em; text-transform: uppercase; opacity: .92; animation: stamp .45s cubic-bezier(.2, 1.4, .4, 1) .2s both; }
+  .stamp-pos { color: #0B6236; }
+  .stamp-neg { color: #C1281A; }
+  @keyframes stamp { 0% { opacity: 0; transform: rotate(-16deg) scale(2.3); } 65% { opacity: 1; transform: rotate(-8deg) scale(.94); } 100% { opacity: .92; transform: rotate(-8deg) scale(1); } }
+
+  .sheet-up { animation: sheetUp .22s ease-out both; }
+  @keyframes sheetUp { from { transform: translateY(40px); opacity: .6; } to { transform: none; opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .stamp, .sheet-up { animation: none; } }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid #FFC21A; outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useMemo, useRef } = React;
+
+/* ================= Constantes ================= */
+const KEY = 'control-agricola-v2';
+const KEY_PREV = 'control-agricola-v2-prev';
+const KEY_V1 = 'control-cultivo-v1';
+const THEME_KEY = 'control-agricola-theme';
+
+const FASES = ['Preparación', 'Siembra', 'Emergencia', 'Desarrollo vegetativo', 'Floración', 'Llenado de grano', 'Cosecha'];
+const CATS_GASTO = [
+  'Preparación de suelo (barbecho/rastra/nivelación)', 'Semilla', 'Fertilizantes (base/cobertera)',
+  'Agroquímicos (herb./insect./fung.)', 'Riego rodado (cuota/luz pozo/regadores)', 'Maquinaria y diésel',
+  'Mano de obra / Jornales', 'Trilla / Cosecha', 'Flete / Acarreo', 'Otros gastos',
+];
+const CAT_RIEGO = CATS_GASTO[4];
+const CATS_INGRESO = ['Venta de grano / cosecha', 'Otros ingresos'];
+const LABORES = ['Barbecho', 'Rastra', 'Nivelación / bordos', 'Siembra', 'Fertilización base', 'Fertilización cobertera', 'Control de maleza (herbicida)', 'Control de plagas (insecticida)', 'Control de enfermedades (fungicida)', 'Cultivo / escarda', 'Trilla / cosecha', 'Otra labor'];
+const UNIDADES = ['kg/ha', 'L/ha', 'g/ha', 'mL/ha', 't/ha', 'bultos/ha'];
+const CLIMAS = ['Soleado', 'Nublado', 'Lluvia', 'Viento', 'Calor intenso', 'Frío / helada'];
+const CULTIVOS = ['Maíz', 'Sorgo', 'Trigo', 'Cebada', 'Frijol', 'Garbanzo', 'Cártamo', 'Alfalfa', 'Brócoli', 'Cebolla', 'Chile', 'Jitomate'];
+const SUELOS = ['Vertisol / Barrial', 'Franco', 'Franco arcilloso', 'Franco arenoso', 'Arcilloso', 'Arenoso', 'Migajón'];
+const RIEGOS_N = ['Riego de asiento / nascencia', '1er auxilio', '2do auxilio', '3er auxilio', '4to auxilio', '5to auxilio', 'Otro riego'];
+const FUENTES = ['Pozo profundo', 'Presa / Módulo de riego', 'Canal', 'Otra fuente'];
+const COSTO_TIPOS = ['Cuota de agua', 'Energía eléctrica', 'Diésel', 'Regadores / otro'];
+
+/* ================= Utilidades ================= */
+const MXN = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+const MXN0 = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 });
+const NUM = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 2 });
+const NUM3 = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 3 });
+const pad = n => String(n).padStart(2, '0');
+const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+const toDate = s => new Date(s + 'T00:00:00');
+const fmtDate = s => s ? toDate(s).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+const fmtDateTime = iso => new Date(iso).toLocaleString('es-MX', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+const daysFrom = s => Math.round((toDate(todayStr()) - toDate(s)) / 86400000);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const num = s => { const n = parseFloat(String(s ?? '').replace(/,/g, '')); return isNaN(n) ? 0 : n; };
+const has = s => s !== '' && s !== null && s !== undefined && !isNaN(parseFloat(String(s).replace(/,/g, '')));
+const ddsOf = p => (p && p.siembra) ? daysFrom(p.siembra) : null;
+const ddsLabel = d => d === null ? 'Sin fecha de siembra' : d >= 0 ? `${d} DDS` : `Siembra en ${-d} d`;
+const ago = iso => { const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000); return d <= 0 ? 'hoy' : d === 1 ? 'ayer' : `hace ${d} días`; };
+const byDateDesc = (a, b) => b.fecha.localeCompare(a.fecha) || b.id.localeCompare(a.id);
+
+/* ================= Cálculos agronómicos ================= */
+// Bases comerciales por defecto (ajústalas a las de tu bodega/comprador)
+function basesFor(cultivo) {
+  const c = (cultivo || '').toLowerCase();
+  if (c.includes('trigo') || c.includes('cebada')) return { h: 12, i: 2 };
+  return { h: 14, i: 2 };
+}
+
+// Descuento estándar: merma por humedad sobre la base y por impurezas sobre la base
+function boleta(b) {
+  const neto = num(b.neto);
+  const H = Math.min(num(b.humedad), 99), I = Math.min(num(b.impurezas), 99);
+  const hb = has(b.hBase) ? num(b.hBase) : 14, ib = has(b.iBase) ? num(b.iBase) : 2;
+  const fH = H > hb ? (100 - H) / (100 - hb) : 1;
+  const afterH = neto * fH;
+  const fI = I > ib ? (100 - I) / (100 - ib) : 1;
+  const calc = afterH * fI;
+  const manual = has(b.tOverride) && num(b.tOverride) > 0;
+  const kg = manual ? num(b.tOverride) * 1000 : calc;
+  return { kgH: neto - afterH, kgI: afterH - calc, ton: kg / 1000, ingreso: (kg / 1000) * num(b.precio), manual };
+}
+
+function volumenM3(r) { return r.unidad === 'm3/h' ? num(r.gasto) * num(r.horas) : num(r.gasto) * 3.6 * num(r.horas); }
+function laminaEst(m3, sup) { return sup > 0 ? m3 / (sup * 100) : 0; } // 1 cm sobre 1 ha = 100 m³
+
+function lastRiego(db, parcelaId) {
+  const r = db.riegos.filter(x => x.parcelaId === parcelaId).sort(byDateDesc)[0];
+  return r || null;
+}
+// Sugiere el siguiente turno a partir del último riego registrado
+function nextRiego(db, parcelaId) {
+  const r = lastRiego(db, parcelaId);
+  if (!r) return RIEGOS_N[0];
+  const i = RIEGOS_N.indexOf(r.numero);
+  return i >= 0 ? RIEGOS_N[Math.min(i + 1, RIEGOS_N.length - 1)] : RIEGOS_N[Math.min(db.riegos.filter(x => x.parcelaId === parcelaId).length, RIEGOS_N.length - 1)];
+}
+
+// Consolidado financiero y productivo (parcela = objeto, o null para todo el rancho)
+function fin(db, parcela) {
+  const pick = a => parcela ? a.filter(x => x.parcelaId === parcela.id) : a;
+  const movs = pick(db.movs), riegos = pick(db.riegos), cosechas = pick(db.cosechas);
+  const sup = parcela ? num(parcela.sup) : db.parcelas.reduce((s, p) => s + num(p.sup), 0);
+  const gMov = movs.filter(m => m.tipo === 'gasto').reduce((s, m) => s + m.monto, 0);
+  const gRiego = riegos.reduce((s, r) => s + num(r.costo), 0);
+  const iMov = movs.filter(m => m.tipo === 'ingreso').reduce((s, m) => s + m.monto, 0);
+  const bs = cosechas.map(boleta);
+  const iCos = bs.reduce((s, x) => s + x.ingreso, 0);
+  const ton = bs.reduce((s, x) => s + x.ton, 0);
+  const g = gMov + gRiego, i = iMov + iCos;
+  const cats = {};
+  movs.filter(m => m.tipo === 'gasto').forEach(m => { cats[m.cat] = (cats[m.cat] || 0) + m.monto; });
+  if (gRiego > 0) cats[CAT_RIEGO] = (cats[CAT_RIEGO] || 0) + gRiego;
+  return {
+    movs, riegos, cosechas, sup, gMov, gRiego, iMov, iCos, g, i, b: i - g, ton,
+    cha: sup > 0 ? g / sup : null,
+    costTon: ton > 0 ? g / ton : null,
+    rend: sup > 0 && ton > 0 ? ton / sup : null,
+    utilHa: sup > 0 ? (i - g) / sup : null,
+    cats,
+  };
+}
+
+/* ================= Datos ================= */
+const EMPTY = { v: 3, parcelas: [], movs: [], labores: [], riegos: [], cosechas: [], papelera: [], sel: 'all', meta: { lastBackup: '' } };
+
+function normalize(d) {
+  const o = { ...EMPTY, ...d };
+  const arr = k => Array.isArray(d[k]) ? d[k] : [];
+  o.parcelas = arr('parcelas').map(p => ({ suelo: '', ...p }));
+  o.movs = arr('movs'); o.labores = arr('labores'); o.riegos = arr('riegos'); o.cosechas = arr('cosechas'); o.papelera = arr('papelera');
+  o.meta = { lastBackup: '', ...(d.meta || {}) };
+  o.sel = (o.sel === 'all' || o.parcelas.some(p => p.id === o.sel)) ? o.sel : 'all';
+  return o;
+}
+
+function migrateV1(v1) {
+  const c = v1.crop || {};
+  const id = uid();
+  const faseMap = { 'Preparación': 'Preparación', 'Sembrado': 'Siembra', 'Crecimiento': 'Desarrollo vegetativo', 'Floración': 'Floración', 'Cosecha': 'Cosecha', 'Finalizado': 'Cosecha' };
+  const catMap = { 'Semillas': CATS_GASTO[1], 'Fertilizantes': CATS_GASTO[2], 'Plaguicidas': CATS_GASTO[3], 'Riego': CATS_GASTO[4], 'Maquinaria': CATS_GASTO[5], 'Mano de obra': CATS_GASTO[6], 'Ventas': CATS_INGRESO[0], 'Otros ingresos': CATS_INGRESO[1] };
+  const laborMap = { 'Siembra': 'Siembra', 'Riego': 'Otra labor', 'Abono': 'Fertilización base', 'Poda': 'Otra labor', 'Control de plagas': 'Control de plagas (insecticida)', 'Cosecha': 'Trilla / cosecha' };
+  const hasData = (v1.movs || []).length || (v1.logs || []).length || c.sowDate || (c.name && c.name !== 'Mi cultivo');
+  if (!hasData) return null;
+  return normalize({
+    parcelas: [{ id, nombre: c.name || 'Parcela 1', sup: num(c.hectares), cultivo: c.name || '', variedad: '', suelo: '', siembra: c.sowDate || '', fase: faseMap[c.status] || 'Preparación', rend: '', precio: '' }],
+    movs: (v1.movs || []).map(m => ({ id: m.id || uid(), parcelaId: id, fecha: m.date, concepto: m.concept, tercero: '', cat: catMap[m.cat] || (m.type === 'gasto' ? 'Otros gastos' : 'Otros ingresos'), monto: m.amount, tipo: m.type })),
+    labores: (v1.logs || []).map(l => ({ id: l.id || uid(), parcelaId: id, fecha: l.date, labor: laborMap[l.act] || 'Otra labor', producto: '', dosis: '', clima: '', notas: l.notes || '' })),
+    sel: id,
+  });
+}
+
+/* Datos de ejemplo (ids "demo-…"): se pueden borrar de un toque desde el Resumen */
+function demoDB() {
+  const dAgo = n => { const d = new Date(); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+  const P1 = 'demo-p1', P2 = 'demo-p2';
+  return normalize({
+    parcelas: [
+      { id: P1, nombre: 'Lote 1 - Maíz (ejemplo)', sup: 6, cultivo: 'Maíz', variedad: 'Híbrido blanco', suelo: 'Vertisol / Barrial', siembra: dAgo(130), fase: 'Cosecha', rend: 10, precio: 6300 },
+      { id: P2, nombre: 'Tabla Sur - Sorgo (ejemplo)', sup: 8, cultivo: 'Sorgo', variedad: 'Híbrido grano', suelo: 'Franco', siembra: dAgo(120), fase: 'Cosecha', rend: 7, precio: 5100 },
+    ],
+    movs: [
+      { id: 'demo-m1', parcelaId: P1, fecha: dAgo(130), concepto: 'Semilla híbrida (ejemplo)', tercero: 'Agroinsumos del Bajío', cat: CATS_GASTO[1], monto: 17400, tipo: 'gasto' },
+      { id: 'demo-m2', parcelaId: P1, fecha: dAgo(95), concepto: 'Urea y DAP (ejemplo)', tercero: 'Agroinsumos del Bajío', cat: CATS_GASTO[2], monto: 31200, tipo: 'gasto' },
+      { id: 'demo-m3', parcelaId: P2, fecha: dAgo(120), concepto: 'Semilla de sorgo (ejemplo)', tercero: 'Casa de semillas', cat: CATS_GASTO[1], monto: 9600, tipo: 'gasto' },
+      { id: 'demo-m4', parcelaId: P2, fecha: dAgo(80), concepto: 'Herbicida y aplicación (ejemplo)', tercero: 'Agroquímicos del Valle', cat: CATS_GASTO[3], monto: 14400, tipo: 'gasto' },
+    ],
+    riegos: [
+      { id: 'demo-r1', parcelaId: P1, fecha: dAgo(60), numero: RIEGOS_N[1], fuente: 'Pozo profundo', horas: 20, gasto: 120, unidad: 'L/s', lamina: 14.4, costo: 7800, costoTipo: 'Energía eléctrica', notas: 'Riego de ejemplo' },
+      { id: 'demo-r2', parcelaId: P2, fecha: dAgo(25), numero: RIEGOS_N[1], fuente: 'Presa / Módulo de riego', horas: 16, gasto: 90, unidad: 'L/s', lamina: 6.5, costo: 2400, costoTipo: 'Cuota de agua', notas: 'Riego de ejemplo' },
+    ],
+    cosechas: [
+      { id: 'demo-c1', parcelaId: P1, fecha: dAgo(8), folio: 'DEMO-001', bruto: 45000, neto: 30000, humedad: 16, impurezas: 3, precio: 6300, hBase: 14, iBase: 2, tOverride: '' },
+      { id: 'demo-c2', parcelaId: P1, fecha: dAgo(7), folio: 'DEMO-002', bruto: 43500, neto: 28500, humedad: 15, impurezas: 2, precio: 6300, hBase: 14, iBase: 2, tOverride: '' },
+      { id: 'demo-c3', parcelaId: P2, fecha: dAgo(5), folio: 'DEMO-003', bruto: 42000, neto: 28000, humedad: 14.5, impurezas: 2.2, precio: 5100, hBase: 14, iBase: 2, tOverride: '' },
+    ],
+    labores: [
+      { id: 'demo-l1', parcelaId: P1, fecha: dAgo(95), labor: 'Fertilización cobertera', producto: 'Urea', dosis: '200 kg/ha', clima: 'Soleado', notas: 'Ejemplo: aplicación antes del riego.' },
+      { id: 'demo-l2', parcelaId: P2, fecha: dAgo(90), labor: 'Control de maleza (herbicida)', producto: 'Atrazina', dosis: '1.5 L/ha', clima: 'Nublado', notas: 'Ejemplo.' },
+    ],
+    meta: { lastBackup: '', seeded: true },
+  });
+}
+const isEmptyDB = d => !d.parcelas.length && !d.movs.length && !d.labores.length && !d.riegos.length && !d.cosechas.length && !d.papelera.length;
+
+function loadDB() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) {
+      const d = normalize(JSON.parse(raw));
+      return (isEmptyDB(d) && !d.meta.seeded) ? demoDB() : d;
+    }
+    const v1 = localStorage.getItem(KEY_V1);
+    if (v1) { const m = migrateV1(JSON.parse(v1)); if (m) return m; }
+  } catch (e) {}
+  return demoDB();
+}
+
+/* ================= Archivos: compartir / descargar ================= */
+async function saveFile(filename, text, mime, prefer) {
+  const tryShare = async () => {
+    try {
+      const file = new File([text], filename, { type: mime });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: filename });
+        return 'share';
+      }
+    } catch (e) { if (e && e.name === 'AbortError') return 'cancel'; }
+    return null;
+  };
+  const tryClaude = async () => {
+    try {
+      const dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null;
+      if (dl) { await dl.save({ filename, data: text }); return 'saved'; }
+    } catch (e) { if (e && e.code === 'declined') return 'cancel'; }
+    return null;
+  };
+  const tryAnchor = () => {
+    try {
+      const blob = new Blob([mime.includes('csv') ? '﻿' + text : text], { type: mime + ';charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 3000);
+      return 'download';
+    } catch (e) { return null; }
+  };
+  const order = prefer === 'share' ? [tryShare, tryClaude, tryAnchor] : [tryClaude, tryAnchor, tryShare];
+  for (const f of order) { const r = await f(); if (r) return r; }
+  return 'fail';
+}
+const csvCell = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+const toCSV = rows => rows.map(r => r.map(csvCell).join(',')).join('\r\n');
+
+/* ================= UI base ================= */
+function Icon({ n, size = 22, className = '', stroke = 2 }) {
+  const node = window.lucide && window.lucide.icons && window.lucide.icons[n];
+  if (!node) return <span className={className} style={{ display: 'inline-block', width: size, height: size }} />;
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      {node.map(([t, a], i) => React.createElement(t, { ...a, key: i }))}
+    </svg>
+  );
+}
+
+const inputCls = 'w-full h-14 rounded-xl px-4 bg-white dark:bg-stone-800 border-[2.5px] border-stone-900 dark:border-stone-500 text-stone-900 dark:text-stone-50 font-semibold focus:outline-none focus:ring-4 focus:ring-amber-300/70';
+const cardCls = 'card rounded-[1.25rem] bg-white dark:bg-stone-900 border-[2.5px] border-stone-900 dark:border-stone-600';
+const btnBase = 'btn3d w-full h-14 rounded-xl border-[2.5px] text-lg font-extrabold flex items-center justify-center gap-2 disabled:opacity-40 ';
+const btnPrimary = btnBase + 'bg-green-800 text-white border-stone-900 dark:border-black';
+const btnWater = btnBase + 'bg-sky-700 text-white border-stone-900 dark:border-black';
+const btnGhost = btnBase + 'bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-50 border-stone-900 dark:border-stone-500 !text-base';
+const btnDanger = btnBase + 'bg-red-700 text-white border-stone-900 dark:border-black';
+const iconBtn = 'btn3d-sm h-11 w-11 shrink-0 rounded-lg bg-white dark:bg-stone-800 border-[2.5px] border-stone-900 dark:border-stone-500 flex items-center justify-center';
+const posTxt = 'text-green-800 dark:text-green-400';
+const negTxt = 'text-red-700 dark:text-red-400';
+
+function Field({ label, children }) {
+  return (
+    <label className="block">
+      <span className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1.5 ml-1">{label}</span>
+      {children}
+    </label>
+  );
+}
+
+function Sheet({ title, onClose, children }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-stone-950/60" onClick={onClose}>
+      <div className="sheet-up w-full max-w-md max-h-[92vh] overflow-y-auto rounded-t-[1.5rem] bg-stone-100 dark:bg-stone-900 border-t-[2.5px] border-x-[2.5px] border-stone-900 dark:border-stone-500 p-5 pt-3 safe-bottom" onClick={e => e.stopPropagation()}>
+        <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-stone-900/30 dark:bg-stone-500" />
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold pr-3">{title}</h3>
+          <button onClick={onClose} className={iconBtn} aria-label="Cerrar"><Icon n="X" /></button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function Chip({ active, onClick, children, water }) {
+  return (
+    <button type="button" onClick={onClick}
+      className={'btn3d-sm min-h-[44px] px-4 rounded-lg text-sm font-extrabold border-[2.5px] shrink-0 inline-flex items-center gap-1.5 ' +
+        (active ? (water ? 'bg-sky-700 text-white' : 'bg-amber-400 text-stone-900') + ' border-stone-900 dark:border-black' : 'bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 border-stone-900 dark:border-stone-500')}>
+      {children}
+    </button>
+  );
+}
+
+function Seg({ value, onChange, options, water }) {
+  return (
+    <div className="grid gap-1 p-1 rounded-xl bg-stone-200 dark:bg-stone-800 border-[2.5px] border-stone-900 dark:border-stone-500" style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
+      {options.map(([id, label, icon]) => (
+        <button key={id} type="button" onClick={() => onChange(id)}
+          className={'min-h-[48px] rounded-lg font-extrabold text-sm flex items-center justify-center gap-1.5 border-2 ' +
+            (value === id ? (water ? 'bg-sky-700 text-white' : 'bg-amber-400 text-stone-900') + ' border-stone-900 dark:border-black' : 'border-transparent text-stone-700 dark:text-stone-300')}>
+          {icon && <Icon n={icon} size={18} />}{label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+const STAT_ICON = [[/gast/i, 'TrendingDown'], [/ingres|venta/i, 'TrendingUp'], [/rendim|ton|cosecha|boleta/i, 'Wheat'], [/costo/i, 'Calculator'], [/utilidad|balance/i, 'Banknote']];
+function Stat({ label, value, tone, sub }) {
+  const ic = (STAT_ICON.find(([re]) => re.test(label)) || [0, 'Leaf'])[1];
+  const chip = tone === 'red' ? 'bg-red-600 text-white' : tone === 'green' ? 'bg-green-800 text-white' : tone === 'blue' ? 'bg-sky-700 text-white' : 'bg-amber-400 text-stone-900';
+  const t = tone === 'red' ? negTxt : tone === 'green' ? posTxt : tone === 'blue' ? 'text-sky-700 dark:text-sky-300' : '';
+  const len = String(value).length;
+  const size = len >= 12 ? 'text-[20px]' : len >= 10 ? 'text-[24px]' : len >= 8 ? 'text-[28px]' : 'text-[34px]';
+  return (
+    <div className={cardCls + ' p-3.5'}>
+      <div className="flex items-center gap-2">
+        <span className={'h-7 w-7 shrink-0 rounded-md flex items-center justify-center border-2 border-stone-900 dark:border-black ' + chip}><Icon n={ic} size={15} stroke={2.4} /></span>
+        <p className="text-[13px] font-bold leading-tight text-stone-700 dark:text-stone-300">{label}</p>
+      </div>
+      <p className={'font-display leading-none font-bold mt-2.5 whitespace-nowrap ' + size + ' ' + t}>{value}</p>
+      {sub && <p className="text-xs font-semibold text-stone-600 dark:text-stone-400 mt-1.5">{sub}</p>}
+    </div>
+  );
+}
+
+function PhaseTrack({ fase }) {
+  const idx = FASES.indexOf(fase);
+  return (
+    <div className="flex gap-1.5">
+      {FASES.map((f, i) => (
+        <div key={f} title={f} className={'h-3 flex-1 rounded-sm border-2 ' + (i < idx ? 'bg-amber-400 border-amber-400' : i === idx ? 'bg-amber-400 border-white' : 'bg-transparent border-white/40')} />
+      ))}
+    </div>
+  );
+}
+
+function Empty({ icon, title, text }) {
+  return (
+    <div className="rounded-[1.25rem] border-[2.5px] border-dashed border-stone-500 dark:border-stone-600 p-6 text-center">
+      <div className="mx-auto mb-3 h-14 w-14 rounded-xl bg-amber-400 text-stone-900 border-[2.5px] border-stone-900 dark:border-black flex items-center justify-center"><Icon n={icon} size={28} stroke={2.2} /></div>
+      <p className="font-display text-2xl font-bold leading-tight">{title}</p>
+      {text && <p className="text-sm font-semibold text-stone-600 dark:text-stone-400 mt-1 max-w-[18rem] mx-auto">{text}</p>}
+    </div>
+  );
+}
+
+function Hero({ tone = 'green', deco, children }) {
+  const t = { green: 'bg-green-800 text-white', water: 'bg-sky-700 text-white', wheat: 'bg-amber-400 text-stone-900' }[tone];
+  return (
+    <div className={'hero rounded-[1.5rem] border-[2.5px] border-stone-900 dark:border-black p-5 ' + t}>
+      <div className={'hero-furrows ' + (tone === 'wheat' ? 'furrows-dark' : 'furrows-light')} />
+      {tone === 'water' && (
+        <svg className="absolute bottom-0 left-0 w-full h-10 opacity-30" viewBox="0 0 400 40" preserveAspectRatio="none" fill="none" stroke="white" strokeWidth="2.5" aria-hidden="true">
+          <path d="M0 14 Q 25 0 50 14 T 100 14 T 150 14 T 200 14 T 250 14 T 300 14 T 350 14 T 400 14" />
+          <path d="M0 30 Q 25 16 50 30 T 100 30 T 150 30 T 200 30 T 250 30 T 300 30 T 350 30 T 400 30" />
+        </svg>
+      )}
+      {deco && <Icon n={deco} size={132} stroke={1.5} className="absolute -right-5 -bottom-7 opacity-[0.16]" />}
+      <div className="relative">{children}</div>
+    </div>
+  );
+}
+
+function BalanceTicket({ f, title }) {
+  const pos = f.b >= 0;
+  const txt = money(f.b);
+  return (
+    <div className="ticket-wrap">
+      <div className="ticket font-mono">
+        <div className="flex justify-between items-start gap-3 text-[12px] font-bold">
+          <span className="min-w-0 break-words">{title}</span><span className="shrink-0">{fmtDate(todayStr())}</span>
+        </div>
+        <div className="dash my-2.5" />
+        <div className="space-y-1 text-[13px] font-semibold">
+          <div className="flex justify-between gap-3"><span>Gastos</span><span>{MXN.format(f.g)}</span></div>
+          <div className="flex justify-between gap-3"><span>Ingresos</span><span>{MXN.format(f.i)}</span></div>
+        </div>
+        <div className="dash my-2.5" />
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[12px] font-bold">Balance neto</p>
+          <div className={'stamp ' + (pos ? 'stamp-pos' : 'stamp-neg')}>{pos ? 'Ganancia' : 'Pérdida'}</div>
+        </div>
+        <p className={'font-display leading-none font-bold whitespace-nowrap mt-2 ' + (txt.length > 12 ? 'text-[38px]' : 'text-[48px]') + ' ' + (pos ? 'text-green-800' : 'text-red-700')}>{txt}</p>
+        {f.utilHa !== null && <p className="mt-2.5 text-[12px] font-bold">Utilidad neta {money0(f.utilHa)}/ha</p>}
+      </div>
+      <div className="ticket-edge" />
+    </div>
+  );
+}
+
+const CAT_COLORS = ['#0B6236', '#FFC21A', '#C1281A', '#7A5A1E', '#7C5CBF', '#1B8A4D', '#66755B'];
+const catColor = (c, i) => c === CAT_RIEGO ? '#0F70D4' : CAT_COLORS[i % CAT_COLORS.length];
+
+const money = v => (v >= 0 ? '+' : '−') + MXN.format(Math.abs(v));
+const money0 = v => (v >= 0 ? '+' : '−') + MXN0.format(Math.abs(v));
+
+/* ================= Tarjeta DDS / Riego ================= */
+function DdsCard({ p }) {
+  const d = ddsOf(p);
+  return (
+    <Hero tone="wheat" deco="Wheat">
+      <div className="flex items-center gap-4">
+        <div className="h-14 w-14 shrink-0 rounded-xl bg-stone-900 text-amber-400 flex items-center justify-center"><Icon n="Wheat" size={30} /></div>
+        <div>
+          {d === null ? <p className="font-display text-3xl font-bold leading-none">Sin fecha de siembra</p> : (
+            <>
+              <p className="font-display text-[54px] leading-none font-bold">{Math.abs(d)}<span className="text-2xl ml-2">{d >= 0 ? 'DDS' : 'días para sembrar'}</span></p>
+              <p className="text-sm font-bold mt-1 text-stone-800">Días después de la siembra, {fmtDate(p.siembra)}</p>
+            </>
+          )}
+        </div>
+      </div>
+    </Hero>
+  );
+}
+
+function RiegoCounter({ db, p }) {
+  if (p) {
+    const r = lastRiego(db, p.id);
+    const mine = db.riegos.filter(x => x.parcelaId === p.id);
+    const lam = mine.reduce((s, x) => s + num(x.lamina), 0);
+    const next = nextRiego(db, p.id);
+    const n = r ? daysFrom(r.fecha) : 0;
+    return (
+      <Hero tone="water" deco="Droplets">
+        <div className="flex items-center gap-4">
+          <div className="h-14 w-14 shrink-0 rounded-xl bg-white text-sky-700 flex items-center justify-center"><Icon n="Droplets" size={30} /></div>
+          <div>
+            {r ? (
+              <>
+                <p className="font-display text-[54px] leading-none font-bold">{n}<span className="text-2xl ml-2">{n === 1 ? 'día' : 'días'}</span></p>
+                <p className="text-sm font-semibold text-sky-100 mt-1">desde el último riego, {fmtDate(r.fecha)}</p>
+              </>
+            ) : <p className="font-display text-3xl font-bold leading-none">Sin riegos registrados</p>}
+          </div>
+        </div>
+        <div className="mt-4 mb-3 grid grid-cols-2 gap-2">
+          <div className="rounded-lg bg-white/15 border-2 border-white/30 p-2.5"><p className="text-sky-100 text-xs font-bold">Siguiente turno</p><p className="font-extrabold leading-tight">{next}</p></div>
+          <div className="rounded-lg bg-white/15 border-2 border-white/30 p-2.5"><p className="text-sky-100 text-xs font-bold">Lámina acumulada</p><p className="font-extrabold leading-tight">{NUM.format(lam)} cm en {mine.length} riego{mine.length === 1 ? '' : 's'}</p></div>
+        </div>
+      </Hero>
+    );
+  }
+  return (
+    <div className={cardCls + ' p-4'}>
+      <p className="font-display text-2xl font-bold mb-2 flex items-center gap-2"><Icon n="Droplets" className="text-sky-700 dark:text-sky-300" /> Último riego por parcela</p>
+      {db.parcelas.length === 0 ? <p className="text-stone-600 dark:text-stone-400 font-semibold">Sin parcelas.</p> : (
+        <ul className="space-y-2">
+          {db.parcelas.map(x => {
+            const r = lastRiego(db, x.id);
+            return <li key={x.id} className="flex justify-between gap-3 items-center"><span className="truncate font-semibold">{x.nombre}</span><b className="shrink-0 px-2.5 py-0.5 rounded-md bg-sky-700 text-white border-2 border-stone-900 dark:border-black">{r ? `${daysFrom(r.fecha)} d` : 'Sin riego'}</b></li>;
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/* ================= Costos / equilibrio ================= */
+function Equilibrio({ p, f }) {
+  const rend = num(p.rend), precio = num(p.precio);
+  return (
+    <div className={cardCls + ' p-5'}>
+      <div className="flex items-center gap-2 mb-3"><Icon n="Scale" className={posTxt} /><h3 className="font-extrabold text-lg">Costos y equilibrio</h3></div>
+      <div className="space-y-2">
+        <div className="flex justify-between gap-3"><span>Falta por recuperar</span><b>{MXN0.format(Math.max(0, f.g - f.i))}</b></div>
+        {f.cha !== null && <div className="flex justify-between gap-3"><span>Costo acumulado por ha</span><b>{MXN0.format(f.cha)}/ha</b></div>}
+        {f.costTon !== null && <div className="flex justify-between gap-3"><span>Costo de producción por ton</span><b>{MXN0.format(f.costTon)}/t</b></div>}
+        {precio > 0 && f.cha !== null && (
+          <div className="flex justify-between gap-3"><span>Rendimiento de equilibrio</span><b>{NUM.format(f.cha / precio)} t/ha</b></div>
+        )}
+        {rend > 0 && f.cha !== null && (
+          <div className="flex justify-between gap-3"><span>Precio de equilibrio</span><b>{MXN0.format(f.cha / rend)}/t</b></div>
+        )}
+      </div>
+      {!(precio > 0 || rend > 0) && <p className="text-sm text-stone-600 dark:text-stone-400 mt-3">Captura rendimiento y precio esperados en la parcela para ver el equilibrio proyectado. El costo por tonelada se calcula con las boletas de cosecha.</p>}
+    </div>
+  );
+}
+
+/* ================= Resumen ================= */
+function DemoBanner({ db, onClear }) {
+  if (!db.parcelas.some(p => String(p.id).startsWith('demo-'))) return null;
+  return (
+    <div className="card rounded-[1.25rem] bg-amber-100 dark:bg-amber-950 border-[2.5px] border-stone-900 dark:border-stone-500 p-4 space-y-3">
+      <p className="font-extrabold">Datos de ejemplo</p>
+      <p className="text-sm text-stone-800 dark:text-stone-200">Hay 2 parcelas de prueba (maíz y sorgo) con gastos, un riego de auxilio y boletas, para ver cómo se calculan el rendimiento en t/ha y los costos. Bórralas cuando empieces con tus datos.</p>
+      <button onClick={onClear} className={btnGhost}><Icon n="Trash2" size={20} /> Borrar datos de ejemplo</button>
+    </div>
+  );
+}
+
+function Resumen({ db, view, setSel, goTab, onClearDemo }) {
+  return (
+    <div className="space-y-4">
+      <DemoBanner db={db} onClear={onClearDemo} />
+      <ResumenBody db={db} view={view} setSel={setSel} goTab={goTab} />
+    </div>
+  );
+}
+
+function ResumenBody({ db, view, setSel, goTab }) {
+  const p = view.parcela;
+  const f = view;
+  const BalanceBox = <BalanceTicket f={f} title={p ? p.nombre : 'Todo el rancho'} />;
+
+  if (!p) {
+    return (
+      <div className="space-y-4">
+        <Hero tone="green" deco="Sprout">
+          <p className="text-green-200 font-bold text-sm">Todo el rancho</p>
+          <h2 className="text-[38px] leading-none font-bold mt-1">General</h2>
+          <p className="mt-2 text-green-100 font-semibold">{db.parcelas.length} parcela{db.parcelas.length === 1 ? '' : 's'} y {NUM.format(f.sup)} ha</p>
+        </Hero>
+        <div className="grid grid-cols-2 gap-3">
+          <Stat label="Total gastado" value={MXN.format(f.g)} tone="red" />
+          <Stat label="Total ingresos" value={MXN.format(f.i)} tone="green" />
+          <Stat label="Costo por hectárea" value={f.cha === null ? '—' : MXN0.format(f.cha) + '/ha'} />
+          <Stat label="Costo por tonelada" value={f.costTon === null ? '—' : MXN0.format(f.costTon) + '/t'} />
+          <Stat label="Toneladas comerciales" value={f.ton > 0 ? NUM.format(f.ton) + ' t' : '—'} />
+          <Stat label="Rendimiento promedio" value={f.rend === null ? '—' : NUM.format(f.rend) + ' t/ha'} />
+        </div>
+        {BalanceBox}
+        <RiegoCounter db={db} p={null} />
+        <h3 className="font-extrabold text-lg px-1 pt-1">Por parcela</h3>
+        {db.parcelas.length === 0 && <p className="px-1 text-stone-600 dark:text-stone-400">Aún no hay parcelas. Créalas en Más → Parcelas.</p>}
+        {db.parcelas.map(x => {
+          const s = fin(db, x);
+          return (
+            <button key={x.id} onClick={() => setSel(x.id)} className={cardCls + ' w-full text-left p-4 flex items-center gap-3'}>
+              <div className="min-w-0 flex-1">
+                <p className="font-extrabold truncate">{x.nombre}</p>
+                <p className="text-sm text-stone-600 dark:text-stone-400 truncate">{x.cultivo || 'Sin cultivo'} · {NUM.format(num(x.sup))} ha · {x.fase}</p>
+                <p className="text-sm font-semibold mt-1">{ddsLabel(ddsOf(x))}{s.rend !== null ? ` · ${NUM.format(s.rend)} t/ha` : ''}{s.cha !== null && s.g > 0 ? ` · ${MXN0.format(s.cha)}/ha` : ''}</p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className={'font-extrabold ' + (s.b >= 0 ? posTxt : negTxt)}>{money0(s.b)}</p>
+                <Icon n="ChevronRight" className="inline text-stone-500" />
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
+  const cats = Object.entries(f.cats).sort((a, b) => b[1] - a[1]);
+  const totalC = cats.reduce((s, x) => s + x[1], 0) || 1;
+  const ult = [...db.labores.filter(l => l.parcelaId === p.id)].sort(byDateDesc).slice(0, 3);
+  return (
+    <div className="space-y-4">
+      <Hero tone="green" deco="Sprout">
+        <p className="text-green-200 font-bold text-sm">{p.cultivo || 'Cultivo sin definir'}{p.variedad ? ` · ${p.variedad}` : ''}</p>
+        <h2 className="text-[36px] leading-none font-bold mt-1">{p.nombre}</h2>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <span className="px-3 py-1.5 rounded-lg bg-amber-400 text-stone-900 border-2 border-stone-900 text-sm font-extrabold">{p.fase}</span>
+          <span className="px-3 py-1.5 rounded-lg bg-white/15 border-2 border-white/30 text-sm font-bold">{ddsLabel(ddsOf(p))}</span>
+          <span className="px-3 py-1.5 rounded-lg bg-white/15 border-2 border-white/30 text-sm font-bold">{NUM.format(num(p.sup))} ha</span>
+          {p.suelo && <span className="px-3 py-1.5 rounded-lg bg-white/15 border-2 border-white/30 text-sm font-bold">{p.suelo}</span>}
+        </div>
+        <div className="mt-4"><PhaseTrack fase={p.fase} /></div>
+        {p.siembra && <p className="mt-3 text-sm font-semibold text-green-100">Siembra: {fmtDate(p.siembra)}</p>}
+      </Hero>
+      <div className="grid grid-cols-2 gap-3">
+        <Stat label="Total gastado" value={MXN.format(f.g)} tone="red" />
+        <Stat label="Ingresos" value={MXN.format(f.i)} tone="green" />
+        <Stat label="Rendimiento real" value={f.rend === null ? '—' : NUM.format(f.rend) + ' t/ha'} sub={f.ton > 0 ? `${NUM.format(f.ton)} t comerciales` : 'Sin boletas aún'} />
+        <Stat label="Costo por tonelada" value={f.costTon === null ? '—' : MXN0.format(f.costTon) + '/t'} sub={f.cha !== null ? `${MXN0.format(f.cha)}/ha` : ''} />
+      </div>
+      {BalanceBox}
+      <RiegoCounter db={db} p={p} />
+      <Equilibrio p={p} f={f} />
+      <div className={cardCls + ' p-5'}>
+        <h3 className="font-bold text-lg mb-3">Gastos por categoría</h3>
+        {cats.length === 0 ? <p className="text-stone-600 dark:text-stone-400 font-semibold">Aún no hay gastos registrados.</p> : (
+          <>
+            <div className="flex h-6 rounded-md overflow-hidden border-2 border-stone-900 dark:border-stone-500 mb-4">
+              {cats.map(([c, v], i) => <div key={c} style={{ width: `${v / totalC * 100}%`, background: catColor(c, i) }} />)}
+            </div>
+            <div className="space-y-2.5">
+              {cats.map(([c, v], i) => (
+                <div key={c} className="flex items-center gap-2.5">
+                  <span className="h-4 w-4 shrink-0 rounded-sm border-2 border-stone-900 dark:border-black" style={{ background: catColor(c, i) }} />
+                  <span className="flex-1 min-w-0 truncate text-sm font-semibold">{c}</span>
+                  <b className="shrink-0">{MXN0.format(v)}</b>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+      <div className={cardCls + ' p-5'}>
+        <h3 className="font-bold text-lg mb-3">Últimas labores</h3>
+        {ult.length === 0 ? <p className="text-stone-600 dark:text-stone-400">Sin labores registradas.</p> : (
+          <ul className="space-y-2">
+            {ult.map(l => (
+              <li key={l.id} className="flex justify-between gap-3">
+                <span className="font-semibold">{l.labor}{l.producto ? ` · ${l.producto}` : ''}</span>
+                <span className="text-sm text-stone-600 dark:text-stone-400 shrink-0">{fmtDate(l.fecha)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ================= Finanzas ================= */
+function MovSheet({ db, defaultParcela, onClose, onSave }) {
+  const [tipo, setTipo] = useState('gasto');
+  const [parcelaId, setParcelaId] = useState(defaultParcela);
+  const [fecha, setFecha] = useState(todayStr());
+  const [concepto, setConcepto] = useState('');
+  const [tercero, setTercero] = useState('');
+  const [cat, setCat] = useState(CATS_GASTO[0]);
+  const [monto, setMonto] = useState('');
+  const [err, setErr] = useState('');
+  const cats = tipo === 'gasto' ? CATS_GASTO : CATS_INGRESO;
+  const cambiaTipo = t => { setTipo(t); setCat((t === 'gasto' ? CATS_GASTO : CATS_INGRESO)[0]); };
+  const guardar = e => {
+    e.preventDefault();
+    const m = num(monto);
+    if (!concepto.trim()) return setErr('Escribe un concepto.');
+    if (m <= 0) return setErr('Escribe un monto mayor a cero.');
+    onSave({ id: uid(), parcelaId, fecha, concepto: concepto.trim(), tercero: tercero.trim(), cat, monto: Math.round(m * 100) / 100, tipo });
+  };
+  return (
+    <Sheet title="Nuevo movimiento" onClose={onClose}>
+      <form onSubmit={guardar} className="space-y-4">
+        <Seg value={tipo} onChange={cambiaTipo} options={[['gasto', 'Gasto'], ['ingreso', 'Ingreso']]} />
+        <Field label="Monto (MXN)">
+          <input className={inputCls + ' text-2xl font-extrabold'} inputMode="decimal" placeholder="$ 0.00" value={monto} onChange={e => setMonto(e.target.value)} />
+        </Field>
+        <Field label="Parcela">
+          <select className={inputCls} value={parcelaId} onChange={e => setParcelaId(e.target.value)}>
+            {db.parcelas.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+            <option value="">Todo el rancho (general)</option>
+          </select>
+        </Field>
+        <Field label="Concepto">
+          <input className={inputCls} placeholder="Ej. Urea 20 bultos" value={concepto} onChange={e => setConcepto(e.target.value)} />
+        </Field>
+        <Field label="Proveedor / Bodega">
+          <input className={inputCls} placeholder="Ej. Agroinsumos del Bajío" value={tercero} onChange={e => setTercero(e.target.value)} />
+        </Field>
+        <Field label="Categoría">
+          <select className={inputCls} value={cat} onChange={e => setCat(e.target.value)}>
+            {cats.map(c => <option key={c}>{c}</option>)}
+          </select>
+        </Field>
+        <Field label="Fecha">
+          <input type="date" className={inputCls} value={fecha} onChange={e => setFecha(e.target.value)} />
+        </Field>
+        <p className="text-sm text-stone-600 dark:text-stone-400">Los costos capturados en Riego y las ventas de las boletas de Cosecha ya se suman solos: no los repitas aquí.</p>
+        {err && <p className={'font-bold ' + negTxt}>{err}</p>}
+        <button type="submit" className={btnPrimary}><Icon n="Check" /> Guardar</button>
+      </form>
+    </Sheet>
+  );
+}
+
+function Finanzas({ db, view, openNew, askTrash }) {
+  const f = view, p = view.parcela;
+  const list = [...f.movs].sort(byDateDesc);
+  const nombre = id => (db.parcelas.find(x => x.id === id) || {}).nombre || 'Rancho (general)';
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3">
+        <Stat label="Gastos" value={MXN.format(f.g)} tone="red" />
+        <Stat label="Ingresos" value={MXN.format(f.i)} tone="green" />
+        <Stat label="Costo acumulado/ha" value={f.cha === null ? '—' : MXN0.format(f.cha)} sub={f.sup > 0 ? `sobre ${NUM.format(f.sup)} ha` : ''} />
+        <Stat label="Costo por tonelada" value={f.costTon === null ? '—' : MXN0.format(f.costTon)} sub={f.ton > 0 ? `${NUM.format(f.ton)} t comerciales` : 'Falta registrar cosecha'} />
+      </div>
+      <BalanceTicket f={f} title={p ? p.nombre : 'Todo el rancho'} />
+      <div className={cardCls + ' p-4 text-sm space-y-1'}>
+        <p className="font-extrabold text-base mb-1">De dónde salen las cifras</p>
+        <div className="flex justify-between"><span>Gastos capturados aquí</span><b>{MXN.format(f.gMov)}</b></div>
+        <div className="flex justify-between"><span className="flex items-center gap-1"><Icon n="Droplets" size={16} className="text-sky-700 dark:text-sky-300" /> Costos de riego (módulo Riego)</span><b>{MXN.format(f.gRiego)}</b></div>
+        <div className="flex justify-between"><span>Ingresos capturados aquí</span><b>{MXN.format(f.iMov)}</b></div>
+        <div className="flex justify-between"><span className="flex items-center gap-1"><Icon n="Wheat" size={16} className="text-amber-700 dark:text-amber-400" /> Ventas por boletas (Cosecha)</span><b>{MXN.format(f.iCos)}</b></div>
+      </div>
+      <button onClick={openNew} className={btnPrimary}><Icon n="Plus" /> Nuevo gasto o ingreso</button>
+      <h3 className="font-extrabold text-lg px-1">Movimientos ({list.length})</h3>
+      {list.length === 0 && <Empty icon="Banknote" title="Aún no hay movimientos" text={p ? 'Registra el primer gasto o ingreso de esta parcela.' : 'Registra el primer gasto o ingreso del rancho.'} />}
+      <ul className="space-y-2">
+        {list.map(m => (
+          <li key={m.id} className={cardCls + ' p-4 flex items-center gap-3'}>
+            <div className={'h-11 w-11 shrink-0 rounded-full flex items-center justify-center ' + (m.tipo === 'gasto' ? 'bg-red-100 dark:bg-red-950 ' + negTxt : 'bg-green-100 dark:bg-green-950 ' + posTxt)}>
+              <Icon n={m.tipo === 'gasto' ? 'TrendingDown' : 'TrendingUp'} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-extrabold truncate">{m.concepto}</p>
+              <p className="text-sm text-stone-600 dark:text-stone-400 truncate">{m.cat}</p>
+              <p className="text-sm text-stone-600 dark:text-stone-400 truncate">{fmtDate(m.fecha)}{m.tercero ? ` · ${m.tercero}` : ''}{!p ? ` · ${nombre(m.parcelaId)}` : ''}</p>
+            </div>
+            <p className={'font-extrabold text-right ' + (m.tipo === 'gasto' ? negTxt : posTxt)}>{m.tipo === 'gasto' ? '−' : '+'}{MXN.format(m.monto)}</p>
+            <button onClick={() => askTrash('mov', m)} className={iconBtn} aria-label="Enviar a la papelera"><Icon n="Trash2" size={20} /></button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/* ================= Riego rodado ================= */
+function RiegoSheet({ db, defaultParcela, onClose, onSave }) {
+  const [parcelaId, setParcelaId] = useState(defaultParcela || (db.parcelas[0] || {}).id || '');
+  const par = db.parcelas.find(p => p.id === parcelaId);
+  const [numero, setNumero] = useState(nextRiego(db, parcelaId));
+  const [fecha, setFecha] = useState(todayStr());
+  const [fuente, setFuente] = useState(FUENTES[0]);
+  const [horas, setHoras] = useState('');
+  const [gasto, setGasto] = useState('');
+  const [unidad, setUnidad] = useState('L/s');
+  const [lamina, setLamina] = useState('');
+  const [costo, setCosto] = useState('');
+  const [costoTipo, setCostoTipo] = useState(COSTO_TIPOS[0]);
+  const [notas, setNotas] = useState('');
+  const [err, setErr] = useState('');
+
+  const cambiaParcela = id => {
+    setParcelaId(id);
+    setNumero(nextRiego(db, id));
+  };
+  const m3 = volumenM3({ unidad, gasto, horas });
+  const est = laminaEst(m3, num(par && par.sup));
+
+  const guardar = e => {
+    e.preventDefault();
+    if (!parcelaId) return setErr('Elige una parcela.');
+    if (num(horas) <= 0) return setErr('Captura las horas de riego.');
+    const lam = has(lamina) ? num(lamina) : (est > 0 ? Math.round(est * 10) / 10 : '');
+    onSave({ id: uid(), parcelaId, fecha, numero, fuente, horas: num(horas), gasto: has(gasto) ? num(gasto) : '', unidad, lamina: lam, costo: has(costo) ? num(costo) : 0, costoTipo, notas: notas.trim() });
+  };
+
+  return (
+    <Sheet title="Nuevo riego" onClose={onClose}>
+      <form onSubmit={guardar} className="space-y-4">
+        <Field label="Parcela">
+          <select className={inputCls} value={parcelaId} onChange={e => cambiaParcela(e.target.value)}>
+            {db.parcelas.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+          </select>
+        </Field>
+        <Field label="Número de riego">
+          <select className={inputCls} value={numero} onChange={e => setNumero(e.target.value)}>
+            {RIEGOS_N.map(n => <option key={n}>{n}</option>)}
+          </select>
+        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Fecha"><input type="date" className={inputCls} value={fecha} onChange={e => setFecha(e.target.value)} /></Field>
+          <Field label="Horas de riego"><input className={inputCls} inputMode="decimal" placeholder="Ej. 12" value={horas} onChange={e => setHoras(e.target.value)} /></Field>
+        </div>
+        <Field label="Fuente de agua">
+          <select className={inputCls} value={fuente} onChange={e => setFuente(e.target.value)}>
+            {FUENTES.map(n => <option key={n}>{n}</option>)}
+          </select>
+        </Field>
+        <div>
+          <span className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1.5 ml-1">Gasto estimado</span>
+          <div className="grid grid-cols-5 gap-2">
+            <input className={inputCls + ' col-span-3'} inputMode="decimal" placeholder={unidad === 'L/s' ? 'Ej. 40' : 'Ej. 150'} value={gasto} onChange={e => setGasto(e.target.value)} />
+            <div className="col-span-2 grid grid-cols-2 gap-1 p-1 rounded-2xl bg-stone-200 dark:bg-stone-800">
+              <button type="button" onClick={() => setUnidad('L/s')} className={'rounded-xl text-sm font-extrabold ' + (unidad === 'L/s' ? 'bg-sky-800 text-white' : '')}>L/s</button>
+              <button type="button" onClick={() => setUnidad('m3/h')} className={'rounded-xl text-sm font-extrabold ' + (unidad === 'm3/h' ? 'bg-sky-800 text-white' : '')}>m³/h</button>
+            </div>
+          </div>
+        </div>
+        <Field label="Lámina aplicada estimada (cm)">
+          <input className={inputCls} inputMode="decimal" placeholder={est > 0 ? `Calculada: ${NUM.format(est)}` : 'Ej. 10'} value={lamina} onChange={e => setLamina(e.target.value)} />
+        </Field>
+        {m3 > 0 && (
+          <div className="rounded-2xl bg-sky-50 dark:bg-sky-950/50 border-2 border-sky-700 p-3 text-sm font-semibold">
+            Volumen ≈ {NUM.format(m3)} m³{est > 0 ? ` · lámina ≈ ${NUM.format(est)} cm` : ''}
+            {est > 0 && <button type="button" onClick={() => setLamina(String(Math.round(est * 10) / 10))} className="ml-2 underline font-extrabold text-sky-800 dark:text-sky-300">Usar</button>}
+            <p className="font-medium text-stone-600 dark:text-stone-400 mt-1">Estimación suponiendo que el gasto riega toda la parcela ({NUM.format(num(par && par.sup))} ha). Ajusta si no fue así.</p>
+          </div>
+        )}
+        <div className="grid grid-cols-5 gap-2">
+          <div className="col-span-2"><Field label="Costo (MXN)"><input className={inputCls} inputMode="decimal" placeholder="$ 0" value={costo} onChange={e => setCosto(e.target.value)} /></Field></div>
+          <div className="col-span-3"><Field label="Tipo de costo"><select className={inputCls + ' px-2'} value={costoTipo} onChange={e => setCostoTipo(e.target.value)}>{COSTO_TIPOS.map(c => <option key={c}>{c}</option>)}</select></Field></div>
+        </div>
+        <Field label="Notas">
+          <textarea className={inputCls + ' h-24 py-3'} placeholder="Ej. Riego parejo, turno del módulo…" value={notas} onChange={e => setNotas(e.target.value)} />
+        </Field>
+        <p className="text-sm text-stone-600 dark:text-stone-400">El costo se suma automáticamente a los gastos (Riego rodado).</p>
+        {err && <p className={'font-bold ' + negTxt}>{err}</p>}
+        <button type="submit" className={btnWater}><Icon n="Check" /> Guardar riego</button>
+      </form>
+    </Sheet>
+  );
+}
+
+function RiegoList({ db, view, openNew, askTrash }) {
+  const p = view.parcela;
+  const list = [...view.riegos].sort(byDateDesc);
+  const nombre = id => (db.parcelas.find(x => x.id === id) || {}).nombre || '';
+  return (
+    <div className="space-y-4">
+      <RiegoCounter db={db} p={p} />
+      <button onClick={openNew} className={btnWater} disabled={db.parcelas.length === 0}><Icon n="Plus" /> Registrar riego</button>
+      {db.parcelas.length === 0 && <p className="px-1 text-stone-600 dark:text-stone-400">Primero crea una parcela en Más → Parcelas.</p>}
+      <h3 className="font-extrabold text-lg px-1">Riegos ({list.length})</h3>
+      {list.length === 0 && db.parcelas.length > 0 && <Empty icon="Droplets" title="Aún no hay riegos" text="Registra el riego de asiento para empezar a contar los días entre riegos." />}
+      <ul className="space-y-2">
+        {list.map(r => {
+          const par = db.parcelas.find(x => x.id === r.parcelaId);
+          const d = par && par.siembra ? daysFrom(par.siembra) - daysFrom(r.fecha) : null;
+          return (
+            <li key={r.id} className={cardCls + ' p-4 flex items-start gap-3'}>
+              <div className="h-11 w-11 shrink-0 rounded-full bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 flex items-center justify-center"><Icon n="Droplets" /></div>
+              <div className="min-w-0 flex-1">
+                <p className="font-extrabold">{r.numero}</p>
+                <p className="text-sm text-stone-600 dark:text-stone-400">{fmtDate(r.fecha)}{d !== null && d >= 0 ? ` · ${d} DDS` : ''}{!p ? ` · ${nombre(r.parcelaId)}` : ''}</p>
+                <p className="text-sm font-semibold mt-1">{r.fuente} · {NUM.format(num(r.horas))} h{has(r.gasto) ? ` · ${NUM.format(num(r.gasto))} ${r.unidad === 'm3/h' ? 'm³/h' : 'L/s'}` : ''}</p>
+                <p className="text-sm font-semibold text-sky-800 dark:text-sky-300">{has(r.lamina) ? `Lámina ≈ ${NUM.format(num(r.lamina))} cm` : 'Lámina sin estimar'}{num(r.costo) > 0 ? ` · ${MXN0.format(num(r.costo))} (${r.costoTipo})` : ''}</p>
+                {r.notas && <p className="text-sm mt-1 whitespace-pre-wrap break-words">{r.notas}</p>}
+              </div>
+              <button onClick={() => askTrash('riego', r)} className={iconBtn} aria-label="Enviar a la papelera"><Icon n="Trash2" size={20} /></button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+/* ================= Labores ================= */
+function LaborSheet({ db, defaultParcela, onClose, onSave }) {
+  const [parcelaId, setParcelaId] = useState(defaultParcela || (db.parcelas[0] || {}).id || '');
+  const [fecha, setFecha] = useState(todayStr());
+  const [labor, setLabor] = useState(LABORES[4]);
+  const [producto, setProducto] = useState('');
+  const [dosisN, setDosisN] = useState('');
+  const [unidad, setUnidad] = useState(UNIDADES[0]);
+  const [clima, setClima] = useState('');
+  const [notas, setNotas] = useState('');
+  const [err, setErr] = useState('');
+  const guardar = e => {
+    e.preventDefault();
+    if (!parcelaId) return setErr('Elige una parcela.');
+    onSave({ id: uid(), parcelaId, fecha, labor, producto: producto.trim(), dosis: dosisN.trim() ? `${dosisN.trim()} ${unidad}` : '', clima, notas: notas.trim() });
+  };
+  return (
+    <Sheet title="Nueva labor" onClose={onClose}>
+      <form onSubmit={guardar} className="space-y-4">
+        <Field label="Parcela">
+          <select className={inputCls} value={parcelaId} onChange={e => setParcelaId(e.target.value)}>
+            {db.parcelas.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+          </select>
+        </Field>
+        <Field label="Labor">
+          <select className={inputCls} value={labor} onChange={e => setLabor(e.target.value)}>{LABORES.map(l => <option key={l}>{l}</option>)}</select>
+        </Field>
+        <Field label="Fecha"><input type="date" className={inputCls} value={fecha} onChange={e => setFecha(e.target.value)} /></Field>
+        <Field label="Producto aplicado">
+          <input className={inputCls} placeholder="Ej. Urea, Glifosato, Atrazina" value={producto} onChange={e => setProducto(e.target.value)} />
+        </Field>
+        <div className="grid grid-cols-5 gap-2">
+          <div className="col-span-3"><Field label="Dosis por ha"><input className={inputCls} inputMode="decimal" placeholder="Ej. 150" value={dosisN} onChange={e => setDosisN(e.target.value)} /></Field></div>
+          <div className="col-span-2"><Field label="Unidad"><select className={inputCls + ' px-2'} value={unidad} onChange={e => setUnidad(e.target.value)}>{UNIDADES.map(u => <option key={u}>{u}</option>)}</select></Field></div>
+        </div>
+        <div>
+          <span className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1.5 ml-1">Clima (opcional)</span>
+          <div className="flex flex-wrap gap-2">{CLIMAS.map(c => <Chip key={c} active={clima === c} onClick={() => setClima(clima === c ? '' : c)}>{c}</Chip>)}</div>
+        </div>
+        <Field label="Notas de campo">
+          <textarea className={inputCls + ' h-28 py-3'} placeholder="Ej. Aplicación en la mañana, viento ligero…" value={notas} onChange={e => setNotas(e.target.value)} />
+        </Field>
+        {err && <p className={'font-bold ' + negTxt}>{err}</p>}
+        <button type="submit" className={btnPrimary}><Icon n="Check" /> Guardar labor</button>
+      </form>
+    </Sheet>
+  );
+}
+
+function LaboresList({ db, view, openNew, askTrash }) {
+  const p = view.parcela;
+  const list = [...db.labores.filter(l => !p || l.parcelaId === p.id)].sort(byDateDesc);
+  return (
+    <div className="space-y-4">
+      {p ? <DdsCard p={p} /> : (
+        <div className={cardCls + ' p-4'}>
+          <p className="font-extrabold mb-2">DDS por parcela</p>
+          {db.parcelas.length === 0 ? <p className="text-stone-600 dark:text-stone-400">Sin parcelas.</p> : (
+            <ul className="space-y-1.5">{db.parcelas.map(x => <li key={x.id} className="flex justify-between gap-3"><span className="truncate">{x.nombre}</span><b className="shrink-0">{ddsLabel(ddsOf(x))}</b></li>)}</ul>
+          )}
+        </div>
+      )}
+      <button onClick={openNew} className={btnPrimary} disabled={db.parcelas.length === 0}><Icon n="Plus" /> Nueva labor</button>
+      {db.parcelas.length === 0 && <p className="px-1 text-stone-600 dark:text-stone-400">Primero crea una parcela en Más → Parcelas.</p>}
+      <h3 className="font-extrabold text-lg px-1">Labores ({list.length})</h3>
+      {list.length === 0 && db.parcelas.length > 0 && <Empty icon="Tractor" title="Aún no hay labores" text="Anota fertilizaciones, aplicaciones y escardas con su dosis por hectárea." />}
+      <ul className="space-y-2">
+        {list.map(l => {
+          const par = db.parcelas.find(x => x.id === l.parcelaId);
+          const d = par && par.siembra ? daysFrom(par.siembra) - daysFrom(l.fecha) : null;
+          return (
+            <li key={l.id} className={cardCls + ' p-4 flex items-start gap-3'}>
+              <div className="h-11 w-11 shrink-0 rounded-full bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-400 flex items-center justify-center"><Icon n="Tractor" /></div>
+              <div className="min-w-0 flex-1">
+                <p className="font-extrabold">{l.labor}</p>
+                <p className="text-sm text-stone-600 dark:text-stone-400">{fmtDate(l.fecha)}{d !== null ? ` · ${d >= 0 ? d + ' DDS' : 'pre-siembra'}` : ''}{!p && par ? ` · ${par.nombre}` : ''}</p>
+                {(l.producto || l.dosis) && <p className="text-sm mt-1 font-semibold">{l.producto}{l.producto && l.dosis ? ' · ' : ''}{l.dosis}</p>}
+                {l.clima && <p className="text-sm text-stone-600 dark:text-stone-400">Clima: {l.clima}</p>}
+                {l.notas && <p className="text-sm mt-1 whitespace-pre-wrap break-words">{l.notas}</p>}
+              </div>
+              <button onClick={() => askTrash('labor', l)} className={iconBtn} aria-label="Enviar a la papelera"><Icon n="Trash2" size={20} /></button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function RiegoLabores({ db, view, openRiego, openLabor, askTrash }) {
+  const [sub, setSub] = useState('riego');
+  return (
+    <div className="space-y-4">
+      <Seg value={sub} onChange={setSub} water={sub === 'riego'} options={[['riego', 'Riego rodado', 'Droplets'], ['labores', 'Labores', 'Tractor']]} />
+      {sub === 'riego' ? <RiegoList db={db} view={view} openNew={openRiego} askTrash={askTrash} /> : <LaboresList db={db} view={view} openNew={openLabor} askTrash={askTrash} />}
+    </div>
+  );
+}
+
+/* ================= Cosecha ================= */
+function CosechaSheet({ db, defaultParcela, onClose, onSave }) {
+  const firstId = defaultParcela || (db.parcelas[0] || {}).id || '';
+  const baseOf = id => basesFor((db.parcelas.find(p => p.id === id) || {}).cultivo);
+  const [parcelaId, setParcelaId] = useState(firstId);
+  const [fecha, setFecha] = useState(todayStr());
+  const [folio, setFolio] = useState('');
+  const [bruto, setBruto] = useState('');
+  const [neto, setNeto] = useState('');
+  const [humedad, setHumedad] = useState('');
+  const [impurezas, setImpurezas] = useState('');
+  const [precio, setPrecio] = useState('');
+  const [hBase, setHBase] = useState(String(baseOf(firstId).h));
+  const [iBase, setIBase] = useState(String(baseOf(firstId).i));
+  const [tOver, setTOver] = useState('');
+  const [adv, setAdv] = useState(false);
+  const [err, setErr] = useState('');
+
+  const cambiaParcela = id => { setParcelaId(id); setHBase(String(baseOf(id).h)); setIBase(String(baseOf(id).i)); };
+  const draft = { neto, humedad, impurezas, precio, hBase, iBase, tOverride: tOver };
+  const r = boleta(draft);
+  const par = db.parcelas.find(p => p.id === parcelaId);
+
+  const guardar = e => {
+    e.preventDefault();
+    if (!parcelaId) return setErr('Elige una parcela.');
+    if (num(neto) <= 0) return setErr('Captura el peso neto (kg).');
+    if (num(precio) <= 0) return setErr('Captura el precio de venta por tonelada.');
+    onSave({ id: uid(), parcelaId, fecha, folio: folio.trim(), bruto: has(bruto) ? num(bruto) : '', neto: num(neto), humedad: num(humedad), impurezas: num(impurezas), precio: num(precio), hBase: num(hBase), iBase: num(iBase), tOverride: has(tOver) ? num(tOver) : '' });
+  };
+
+  return (
+    <Sheet title="Nueva boleta de cosecha" onClose={onClose}>
+      <form onSubmit={guardar} className="space-y-4">
+        <Field label="Parcela">
+          <select className={inputCls} value={parcelaId} onChange={e => cambiaParcela(e.target.value)}>
+            {db.parcelas.map(p => <option key={p.id} value={p.id}>{p.nombre}{p.cultivo ? ` · ${p.cultivo}` : ''}</option>)}
+          </select>
+        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Fecha"><input type="date" className={inputCls} value={fecha} onChange={e => setFecha(e.target.value)} /></Field>
+          <Field label="Folio de boleta"><input className={inputCls} placeholder="Ej. 004512" value={folio} onChange={e => setFolio(e.target.value)} /></Field>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Peso bruto (kg)"><input className={inputCls} inputMode="decimal" placeholder="Ej. 48,500" value={bruto} onChange={e => setBruto(e.target.value)} /></Field>
+          <Field label="Peso neto (kg)"><input className={inputCls + ' font-extrabold'} inputMode="decimal" placeholder="Ej. 30,200" value={neto} onChange={e => setNeto(e.target.value)} /></Field>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Humedad (%)"><input className={inputCls} inputMode="decimal" placeholder="Ej. 15.5" value={humedad} onChange={e => setHumedad(e.target.value)} /></Field>
+          <Field label="Impurezas (%)"><input className={inputCls} inputMode="decimal" placeholder="Ej. 2.5" value={impurezas} onChange={e => setImpurezas(e.target.value)} /></Field>
+        </div>
+        <Field label="Precio de venta ($/ton)">
+          <input className={inputCls + ' text-xl font-extrabold'} inputMode="decimal" placeholder="Ej. 6,200" value={precio} onChange={e => setPrecio(e.target.value)} />
+        </Field>
+
+        <div className="rounded-2xl bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-700 p-4 space-y-1.5">
+          <p className="font-extrabold">Cálculo comercial</p>
+          <div className="flex justify-between text-sm"><span>Peso neto</span><b>{NUM.format(num(neto))} kg</b></div>
+          <div className="flex justify-between text-sm"><span>Descuento por humedad</span><b>−{NUM.format(r.kgH)} kg</b></div>
+          <div className="flex justify-between text-sm"><span>Descuento por impurezas</span><b>−{NUM.format(r.kgI)} kg</b></div>
+          <div className="flex justify-between text-lg pt-1 border-t-2 border-amber-700/40"><span className="font-bold">Toneladas comerciales</span><b>{NUM3.format(r.ton)} t</b></div>
+          <div className="flex justify-between text-lg"><span className="font-bold">Ingreso</span><b className={posTxt}>{MXN.format(r.ingreso)}</b></div>
+          {r.manual && <p className="text-xs font-semibold">Usando las toneladas comerciales capturadas manualmente.</p>}
+        </div>
+
+        <button type="button" onClick={() => setAdv(!adv)} className="text-sm font-extrabold underline text-green-800 dark:text-green-400">{adv ? 'Ocultar' : 'Ajustar'} bases de descuento</button>
+        {adv && (
+          <div className="rounded-2xl bg-stone-100 dark:bg-stone-800 p-3 space-y-3">
+            <p className="text-sm text-stone-700 dark:text-stone-300">Se descuenta el peso solo cuando la humedad o las impurezas pasan la base. Por defecto: {basesFor(par && par.cultivo).h}% de humedad y {basesFor(par && par.cultivo).i}% de impurezas. Ajústalas a las de tu bodega; la boleta del comprador es la que manda.</p>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Base humedad (%)"><input className={inputCls} inputMode="decimal" value={hBase} onChange={e => setHBase(e.target.value)} /></Field>
+              <Field label="Base impurezas (%)"><input className={inputCls} inputMode="decimal" value={iBase} onChange={e => setIBase(e.target.value)} /></Field>
+            </div>
+            <Field label="Toneladas comerciales según boleta (opcional)">
+              <input className={inputCls} inputMode="decimal" placeholder="Si la bodega ya las calculó" value={tOver} onChange={e => setTOver(e.target.value)} />
+            </Field>
+          </div>
+        )}
+        {err && <p className={'font-bold ' + negTxt}>{err}</p>}
+        <button type="submit" className={btnPrimary}><Icon n="Check" /> Guardar boleta</button>
+      </form>
+    </Sheet>
+  );
+}
+
+function Cosecha({ db, view, openNew, askTrash }) {
+  const f = view, p = view.parcela;
+  const list = [...f.cosechas].sort(byDateDesc);
+  const nombre = id => (db.parcelas.find(x => x.id === id) || {}).nombre || '';
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3">
+        <Stat label="Toneladas comerciales" value={f.ton > 0 ? NUM.format(f.ton) + ' t' : '—'} tone="green" sub={`${f.cosechas.length} boleta${f.cosechas.length === 1 ? '' : 's'}`} />
+        <Stat label="Rendimiento real" value={f.rend === null ? '—' : NUM.format(f.rend) + ' t/ha'} tone="green" sub={f.sup > 0 ? `sobre ${NUM.format(f.sup)} ha` : ''} />
+        <Stat label="Ingreso por cosecha" value={MXN0.format(f.iCos)} />
+        <Stat label="Utilidad neta por ha" value={f.utilHa === null ? '—' : money0(f.utilHa) + '/ha'} tone={f.utilHa !== null && f.utilHa < 0 ? 'red' : 'green'} />
+      </div>
+      <div className={cardCls + ' p-4 flex justify-between items-center gap-3'}>
+        <span className="font-semibold">Costo de producción por tonelada</span>
+        <b className="text-xl">{f.costTon === null ? '—' : MXN0.format(f.costTon) + '/t'}</b>
+      </div>
+      {!p && db.parcelas.length > 1 && f.cosechas.length > 0 && (
+        <div className={cardCls + ' p-4'}>
+          <p className="font-extrabold mb-2">Rendimiento por parcela</p>
+          <ul className="space-y-1.5">
+            {db.parcelas.map(x => { const s = fin(db, x); return <li key={x.id} className="flex justify-between gap-3"><span className="truncate">{x.nombre}</span><b className="shrink-0">{s.rend === null ? '—' : NUM.format(s.rend) + ' t/ha'}</b></li>; })}
+          </ul>
+        </div>
+      )}
+      <button onClick={openNew} className={btnPrimary} disabled={db.parcelas.length === 0}><Icon n="Plus" /> Registrar boleta</button>
+      {db.parcelas.length === 0 && <p className="px-1 text-stone-600 dark:text-stone-400">Primero crea una parcela en Más → Parcelas.</p>}
+      <h3 className="font-extrabold text-lg px-1">Boletas ({list.length})</h3>
+      {list.length === 0 && db.parcelas.length > 0 && <Empty icon="Wheat" title="Aún no hay boletas" text="Con la primera boleta de báscula se calculan el rendimiento y el costo por tonelada." />}
+      <ul className="space-y-6 pb-2">
+        {list.map(b => {
+          const r = boleta(b);
+          return (
+            <li key={b.id}>
+              <div className="ticket-wrap">
+                <div className="ticket font-mono text-[13px] font-semibold">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="min-w-0">
+                      <p className="font-bold text-[14px]">Boleta {b.folio || 's/folio'}</p>
+                      <p className="text-[12px]">{fmtDate(b.fecha)}{!p ? `, ${nombre(b.parcelaId)}` : ''}</p>
+                    </div>
+                    <button onClick={() => askTrash('cosecha', b)} className="shrink-0 h-9 w-9 rounded-md border-2 border-stone-900 bg-white flex items-center justify-center" aria-label="Enviar a la papelera"><Icon n="Trash2" size={18} /></button>
+                  </div>
+                  <div className="dash my-2.5" />
+                  <div className="space-y-1">
+                    <div className="flex justify-between gap-3"><span>Peso neto</span><span>{NUM.format(num(b.neto))} kg</span></div>
+                    <div className="flex justify-between gap-3"><span>Humedad {NUM.format(num(b.humedad))}%, impurezas {NUM.format(num(b.impurezas))}%</span><span className="shrink-0">−{NUM.format(r.kgH + r.kgI)} kg</span></div>
+                    <div className="flex justify-between gap-3"><span>Comerciales</span><span>{NUM3.format(r.ton)} t</span></div>
+                    <div className="flex justify-between gap-3"><span>Precio</span><span>{MXN0.format(num(b.precio))}/t</span></div>
+                  </div>
+                  <div className="dash my-2.5" />
+                  <div className="flex items-end justify-between gap-2"><span className="font-bold">Ingreso</span><span className="font-display text-[36px] leading-none font-bold text-green-800">{MXN0.format(r.ingreso)}</span></div>
+                </div>
+                <div className="ticket-edge" />
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+/* ================= Parcelas ================= */
+function ParcelaSheet({ parcela, onClose, onSave }) {
+  const [f, setF] = useState(parcela || { id: uid(), nombre: '', sup: '', cultivo: '', variedad: '', suelo: '', siembra: '', fase: FASES[0], rend: '', precio: '' });
+  const [err, setErr] = useState('');
+  const set = (k, v) => setF(x => ({ ...x, [k]: v }));
+  const guardar = e => {
+    e.preventDefault();
+    if (!f.nombre.trim()) return setErr('Escribe el nombre de la parcela.');
+    if (num(f.sup) <= 0) return setErr('Captura la superficie en hectáreas.');
+    onSave({ ...f, nombre: f.nombre.trim(), sup: num(f.sup), rend: has(f.rend) ? num(f.rend) : '', precio: has(f.precio) ? num(f.precio) : '' });
+  };
+  return (
+    <Sheet title={parcela ? 'Editar parcela' : 'Nueva parcela'} onClose={onClose}>
+      <form onSubmit={guardar} className="space-y-4">
+        <Field label="Nombre"><input className={inputCls} placeholder="Ej. Lote 1 - Maíz" value={f.nombre} onChange={e => set('nombre', e.target.value)} /></Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Superficie (ha)"><input className={inputCls} inputMode="decimal" placeholder="Ej. 12.5" value={f.sup} onChange={e => set('sup', e.target.value)} /></Field>
+          <Field label="Fecha de siembra"><input type="date" className={inputCls} value={f.siembra} onChange={e => set('siembra', e.target.value)} /></Field>
+        </div>
+        <Field label="Cultivo">
+          <input className={inputCls} list="lista-cultivos" placeholder="Ej. Maíz" value={f.cultivo} onChange={e => set('cultivo', e.target.value)} />
+          <datalist id="lista-cultivos">{CULTIVOS.map(c => <option key={c} value={c} />)}</datalist>
+        </Field>
+        <Field label="Variedad / Híbrido"><input className={inputCls} placeholder="Ej. Híbrido blanco" value={f.variedad} onChange={e => set('variedad', e.target.value)} /></Field>
+        <Field label="Tipo de suelo">
+          <input className={inputCls} list="lista-suelos" placeholder="Ej. Vertisol / Barrial" value={f.suelo} onChange={e => set('suelo', e.target.value)} />
+          <datalist id="lista-suelos">{SUELOS.map(c => <option key={c} value={c} />)}</datalist>
+        </Field>
+        <div>
+          <span className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1.5 ml-1">Etapa fenológica actual</span>
+          <div className="flex flex-wrap gap-2">{FASES.map(x => <Chip key={x} active={f.fase === x} onClick={() => set('fase', x)}>{x}</Chip>)}</div>
+        </div>
+        <div className="rounded-2xl p-3 bg-stone-100 dark:bg-stone-800 space-y-3">
+          <p className="text-sm font-bold">Metas para el equilibrio proyectado (opcional)</p>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Rend. esperado (t/ha)"><input className={inputCls} inputMode="decimal" placeholder="Ej. 9" value={f.rend} onChange={e => set('rend', e.target.value)} /></Field>
+            <Field label="Precio esperado ($/t)"><input className={inputCls} inputMode="decimal" placeholder="Ej. 6200" value={f.precio} onChange={e => set('precio', e.target.value)} /></Field>
+          </div>
+        </div>
+        {err && <p className={'font-bold ' + negTxt}>{err}</p>}
+        <button type="submit" className={btnPrimary}><Icon n="Check" /> Guardar parcela</button>
+      </form>
+    </Sheet>
+  );
+}
+
+function Parcelas({ db, setSel, openEdit, askTrashParcela, goTab }) {
+  return (
+    <div className="space-y-4">
+      <button onClick={() => openEdit(null)} className={btnPrimary}><Icon n="Plus" /> Nueva parcela</button>
+      {db.parcelas.length === 0 && <Empty icon="Sprout" title="Aún no hay parcelas" text="Crea la primera para registrar gastos, riegos y cosechas." />}
+      {db.parcelas.map(p => {
+        const s = fin(db, p);
+        return (
+          <div key={p.id} className={cardCls + ' p-4 space-y-3'}>
+            <div className="flex items-start gap-3">
+              <div className="h-12 w-12 shrink-0 rounded-2xl bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-400 flex items-center justify-center"><Icon n="Sprout" size={26} /></div>
+              <div className="min-w-0 flex-1">
+                <p className="text-lg font-extrabold leading-tight">{p.nombre}</p>
+                <p className="text-sm text-stone-600 dark:text-stone-400">{p.cultivo || 'Sin cultivo'}{p.variedad ? ` · ${p.variedad}` : ''}</p>
+                {p.suelo && <p className="text-sm text-stone-600 dark:text-stone-400">Suelo: {p.suelo}</p>}
+              </div>
+              <button onClick={() => openEdit(p)} className={iconBtn} aria-label="Editar"><Icon n="Pencil" size={20} /></button>
+              <button onClick={() => askTrashParcela(p)} className={iconBtn} aria-label="Enviar a la papelera"><Icon n="Trash2" size={20} /></button>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="rounded-xl bg-stone-100 dark:bg-stone-800 p-2"><p className="text-xs font-semibold text-stone-600 dark:text-stone-400">Superficie</p><p className="font-extrabold">{NUM.format(num(p.sup))} ha</p></div>
+              <div className="rounded-xl bg-stone-100 dark:bg-stone-800 p-2"><p className="text-xs font-semibold text-stone-600 dark:text-stone-400">Siembra</p><p className="font-extrabold">{p.siembra ? fmtDate(p.siembra).replace(/ de /g, ' ') : '—'}</p></div>
+              <div className="rounded-xl bg-stone-100 dark:bg-stone-800 p-2"><p className="text-xs font-semibold text-stone-600 dark:text-stone-400">DDS</p><p className="font-extrabold">{ddsOf(p) === null ? '—' : ddsOf(p)}</p></div>
+            </div>
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="px-3 py-1.5 rounded-full bg-amber-400 text-stone-950 text-sm font-extrabold">{p.fase}</span>
+              {s.cha !== null && s.g > 0 && <span className="px-3 py-1.5 rounded-full bg-stone-200 dark:bg-stone-800 text-sm font-bold">{MXN0.format(s.cha)}/ha</span>}
+            </div>
+            <button onClick={() => { setSel(p.id); goTab('resumen'); }} className={btnGhost}>Seleccionar y ver resumen</button>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ================= Papelera ================= */
+function Papelera({ db, setDb, askConfirm, restore }) {
+  const items = [...db.papelera].sort((a, b) => b.deletedAt.localeCompare(a.deletedAt));
+  const title = t => {
+    if (t.kind === 'parcela') return `Parcela · ${t.item.nombre}`;
+    if (t.kind === 'mov') return `${t.item.tipo === 'gasto' ? 'Gasto' : 'Ingreso'} · ${t.item.concepto}`;
+    if (t.kind === 'riego') return `Riego · ${t.item.numero}`;
+    if (t.kind === 'cosecha') return `Boleta · ${t.item.folio || 's/folio'}`;
+    return `Labor · ${t.item.labor}`;
+  };
+  const sub = t => {
+    const x = t.extra || {};
+    if (t.kind === 'parcela') return `Incluye ${(x.movs || []).length} movimientos, ${(x.riegos || []).length} riegos, ${(x.cosechas || []).length} boletas y ${(x.labores || []).length} labores`;
+    if (t.kind === 'mov') return `${MXN.format(t.item.monto)} · ${t.item.cat}`;
+    if (t.kind === 'riego') return `${fmtDate(t.item.fecha)} · ${NUM.format(num(t.item.horas))} h · ${t.item.fuente}`;
+    if (t.kind === 'cosecha') return `${fmtDate(t.item.fecha)} · ${NUM3.format(boleta(t.item).ton)} t comerciales`;
+    return `${fmtDate(t.item.fecha)}${t.item.producto ? ' · ' + t.item.producto : ''}`;
+  };
+  const parcelaDe = t => t.kind === 'parcela' ? null : db.parcelas.find(p => p.id === t.item.parcelaId);
+  const puede = t => t.kind === 'parcela' || (t.kind === 'mov' && t.item.parcelaId === '') || !!parcelaDe(t);
+  const nombreParcela = t => { const p = parcelaDe(t); return p ? p.nombre : ''; };
+  const quitar = id => setDb(d => ({ ...d, papelera: d.papelera.filter(x => x.id !== id) }));
+  const icon = t => ({ parcela: 'Sprout', mov: 'Banknote', riego: 'Droplets', cosecha: 'Wheat', labor: 'Tractor' })[t.kind];
+  return (
+    <div className="space-y-3">
+      {items.length === 0 && (
+        <div className={cardCls + ' p-6 text-center'}>
+          <Icon n="Trash2" size={36} className="mx-auto text-stone-500" />
+          <p className="font-extrabold mt-2">La papelera está vacía</p>
+          <p className="text-sm text-stone-600 dark:text-stone-400 mt-1">Lo que elimines aparecerá aquí y podrás restaurarlo a su parcela original.</p>
+        </div>
+      )}
+      {items.map(t => (
+        <div key={t.id} className={cardCls + ' p-4 space-y-3'}>
+          <div className="flex items-start gap-3">
+            <div className="h-11 w-11 shrink-0 rounded-full bg-stone-200 dark:bg-stone-800 flex items-center justify-center"><Icon n={icon(t)} /></div>
+            <div className="min-w-0 flex-1">
+              <p className="font-extrabold break-words">{title(t)}</p>
+              <p className="text-sm text-stone-600 dark:text-stone-400">{sub(t)}</p>
+              {nombreParcela(t) && <p className="text-sm text-stone-600 dark:text-stone-400">Parcela: {nombreParcela(t)}</p>}
+              <p className="text-sm font-semibold mt-1">Eliminado: {fmtDateTime(t.deletedAt)} ({ago(t.deletedAt)})</p>
+              {!puede(t) && <p className={'text-sm font-semibold mt-1 ' + negTxt}>Su parcela está en la papelera: restaura primero la parcela.</p>}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button disabled={!puede(t)} onClick={() => restore(t)} className={btnPrimary.replace('h-14', 'h-12').replace('text-lg', 'text-base')}><Icon n="RotateCcw" size={20} /> Restaurar</button>
+            <button onClick={() => askConfirm({ title: '¿Eliminar para siempre?', text: 'Este registro se borrará definitivamente y no podrá recuperarse.', yes: 'Sí, eliminar', onYes: () => quitar(t.id) })} className={btnDanger.replace('h-14', 'h-12').replace('text-lg', 'text-base')}><Icon n="Trash2" size={20} /> Eliminar</button>
+          </div>
+        </div>
+      ))}
+      {items.length > 0 && (
+        <button onClick={() => askConfirm({ title: '¿Vaciar la papelera?', text: `Se eliminarán definitivamente ${items.length} elemento(s).`, yes: 'Sí, vaciar', onYes: () => setDb(d => ({ ...d, papelera: [] })) })} className={btnGhost}>Vaciar papelera</button>
+      )}
+    </div>
+  );
+}
+
+/* ================= Respaldo / OneDrive ================= */
+function Respaldo({ db, backup }) {
+  const fileRef = useRef(null);
+  const [msg, setMsg] = useState('');
+  const hace = db.meta.lastBackup ? daysFrom(db.meta.lastBackup.slice(0, 10)) : null;
+  const onFile = async e => {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!f) return;
+    try {
+      const data = JSON.parse(await f.text());
+      if (!data || !Array.isArray(data.parcelas) || !Array.isArray(data.movs) || !Array.isArray(data.labores)) throw new Error('formato');
+      backup.askRestore(normalize(data), f.name);
+    } catch (err) { setMsg('Ese archivo no parece un respaldo válido de la Bitácora Agrícola.'); }
+  };
+  const run = async fn => { setMsg('Preparando…'); setMsg(await fn()); };
+  return (
+    <div className="space-y-4">
+      <div className={cardCls + ' p-5 space-y-2'}>
+        <div className="flex items-center gap-2"><Icon n="Database" className={posTxt} /><h3 className="font-extrabold text-lg">Base de datos local</h3></div>
+        <p className="text-sm text-stone-700 dark:text-stone-300">Todo se guarda automáticamente en este dispositivo y funciona sin señal.</p>
+        <p className="font-semibold">{db.parcelas.length} parcelas · {db.movs.length} movimientos · {db.riegos.length} riegos · {db.cosechas.length} boletas · {db.labores.length} labores</p>
+        <p className={'font-bold ' + (hace === null || hace > 7 ? negTxt : posTxt)}>{db.meta.lastBackup ? `Último respaldo: ${fmtDateTime(db.meta.lastBackup)}` : 'Aún no has hecho un respaldo.'}</p>
+        {(hace === null || hace > 7) && <p className="text-sm text-stone-700 dark:text-stone-300">Te recomendamos respaldar al menos una vez por semana.</p>}
+      </div>
+      <div className={cardCls + ' p-5 space-y-3'}>
+        <div className="flex items-center gap-2"><Icon n="Cloud" className={posTxt} /><h3 className="font-extrabold text-lg">Respaldo en OneDrive</h3></div>
+        <p className="text-sm text-stone-700 dark:text-stone-300">Genera el archivo y, en el menú de compartir del iPhone, elige “Guardar en Archivos” y la carpeta de OneDrive.</p>
+        <button onClick={() => run(backup.exportJSON)} className={btnPrimary}><Icon n="Share2" /> Guardar base de datos (.json)</button>
+        <button onClick={() => fileRef.current && fileRef.current.click()} className={btnGhost}><Icon n="Upload" /> Cargar respaldo (.json)</button>
+        <input ref={fileRef} type="file" accept=".json,application/json" className="hidden" onChange={onFile} />
+      </div>
+      <div className={cardCls + ' p-5 space-y-3'}>
+        <div className="flex items-center gap-2"><Icon n="FileSpreadsheet" className={posTxt} /><h3 className="font-extrabold text-lg">Exportar a Excel (.csv)</h3></div>
+        <button onClick={() => run(() => backup.exportCSV('finanzas'))} className={btnGhost}><Icon n="Download" /> Finanzas</button>
+        <button onClick={() => run(() => backup.exportCSV('riegos'))} className={btnGhost}><Icon n="Download" /> Riegos</button>
+        <button onClick={() => run(() => backup.exportCSV('cosecha'))} className={btnGhost}><Icon n="Download" /> Cosecha</button>
+        <button onClick={() => run(() => backup.exportCSV('labores'))} className={btnGhost}><Icon n="Download" /> Labores</button>
+        <button onClick={() => run(() => backup.exportCSV('parcelas'))} className={btnGhost}><Icon n="Download" /> Parcelas y costos</button>
+      </div>
+      {msg && <p className={'px-1 font-bold ' + posTxt}>{msg}</p>}
+    </div>
+  );
+}
+
+/* ================= App ================= */
+const COLL = { mov: 'movs', labor: 'labores', riego: 'riegos', cosecha: 'cosechas' };
+
+function App() {
+  const [db, setDb] = useState(loadDB);
+  const [tab, setTab] = useState('resumen');
+  const [mas, setMas] = useState('parcelas');
+  const [modal, setModal] = useState(null);
+  const [storageOk, setStorageOk] = useState(true);
+  const [dark, setDark] = useState(() => { try { return localStorage.getItem(THEME_KEY) === 'dark'; } catch (e) { return false; } });
+
+  useEffect(() => { try { localStorage.setItem(KEY, JSON.stringify(db)); setStorageOk(true); } catch (e) { setStorageOk(false); } }, [db]);
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', dark);
+    try { localStorage.setItem(THEME_KEY, dark ? 'dark' : 'light'); } catch (e) {}
+  }, [dark]);
+
+  const sel = (db.sel !== 'all' && db.parcelas.some(p => p.id === db.sel)) ? db.sel : 'all';
+  const setSel = id => setDb(d => ({ ...d, sel: id }));
+  const goTab = t => { setTab(t); window.scrollTo(0, 0); };
+
+  const view = useMemo(() => {
+    const parcela = sel === 'all' ? null : db.parcelas.find(p => p.id === sel) || null;
+    return { parcela, ...fin(db, parcela) };
+  }, [db, sel]);
+
+  /* --- papelera --- */
+  const trash = (kind, item, extra) => ({ id: uid(), kind, item, extra: extra || {}, deletedAt: new Date().toISOString() });
+  const askConfirm = c => setModal({ k: 'confirm', ...c });
+  const describe = (kind, it) => kind === 'mov' ? `${it.concepto} · ${MXN.format(it.monto)}` : kind === 'riego' ? `${it.numero} · ${fmtDate(it.fecha)}` : kind === 'cosecha' ? `Boleta ${it.folio || 's/folio'} · ${fmtDate(it.fecha)}` : `${it.labor} · ${fmtDate(it.fecha)}`;
+  const askTrash = (kind, item) => askConfirm({
+    title: '¿Enviar a la papelera?', text: describe(kind, item), yes: 'Enviar a la papelera', safe: true,
+    onYes: () => setDb(d => ({ ...d, [COLL[kind]]: d[COLL[kind]].filter(x => x.id !== item.id), papelera: [trash(kind, item), ...d.papelera] })),
+  });
+  const askTrashParcela = p => {
+    const c = k => db[k].filter(x => x.parcelaId === p.id).length;
+    askConfirm({
+      title: '¿Enviar parcela a la papelera?',
+      text: `${p.nombre} se enviará junto con ${c('movs')} movimiento(s), ${c('riegos')} riego(s), ${c('cosechas')} boleta(s) y ${c('labores')} labor(es). Podrás restaurarla completa.`,
+      yes: 'Enviar a la papelera', safe: true,
+      onYes: () => setDb(d => {
+        const keep = k => d[k].filter(x => x.parcelaId !== p.id), take = k => d[k].filter(x => x.parcelaId === p.id);
+        return {
+          ...d, parcelas: d.parcelas.filter(x => x.id !== p.id),
+          movs: keep('movs'), labores: keep('labores'), riegos: keep('riegos'), cosechas: keep('cosechas'),
+          papelera: [trash('parcela', p, { movs: take('movs'), labores: take('labores'), riegos: take('riegos'), cosechas: take('cosechas') }), ...d.papelera],
+        };
+      }),
+    });
+  };
+  const restore = t => setDb(d => {
+    const papelera = d.papelera.filter(x => x.id !== t.id);
+    if (t.kind === 'parcela') {
+      const x = t.extra || {};
+      return { ...d, parcelas: [...d.parcelas, t.item], movs: [...d.movs, ...(x.movs || [])], labores: [...d.labores, ...(x.labores || [])], riegos: [...d.riegos, ...(x.riegos || [])], cosechas: [...d.cosechas, ...(x.cosechas || [])], papelera };
+    }
+    return { ...d, [COLL[t.kind]]: [...d[COLL[t.kind]], t.item], papelera };
+  });
+
+  const clearDemo = () => askConfirm({
+    title: '¿Borrar datos de ejemplo?', text: 'Se eliminarán definitivamente las parcelas de ejemplo y todo lo registrado en ellas. Tus propios datos no se tocan.', yes: 'Sí, borrar ejemplos',
+    onYes: () => setDb(d => {
+      const isDemo = id => String(id).startsWith('demo-');
+      const keep = k => d[k].filter(x => !isDemo(x.parcelaId));
+      return { ...d, sel: 'all', parcelas: d.parcelas.filter(p => !isDemo(p.id)), movs: keep('movs'), labores: keep('labores'), riegos: keep('riegos'), cosechas: keep('cosechas'),
+        papelera: d.papelera.filter(t => t.kind === 'parcela' ? !isDemo(t.item.id) : !isDemo(t.item.parcelaId)) };
+    }),
+  });
+
+  /* --- respaldo --- */
+  const markBackup = r => { if (r !== 'cancel' && r !== 'fail') setDb(d => ({ ...d, meta: { ...d.meta, lastBackup: new Date().toISOString() } })); };
+  const backup = {
+    exportJSON: async () => {
+      const out = { app: 'BitacoraAgricola', version: 3, exportadoEn: new Date().toISOString(), parcelas: db.parcelas, movs: db.movs, labores: db.labores, riegos: db.riegos, cosechas: db.cosechas, papelera: db.papelera };
+      const r = await saveFile(`BitacoraAgricola_${todayStr()}.json`, JSON.stringify(out, null, 2), 'application/json', 'share');
+      markBackup(r);
+      return r === 'cancel' ? 'Cancelado.' : r === 'fail' ? 'No se pudo generar el archivo en este navegador.' : r === 'download' ? 'Archivo descargado. Muévelo a tu carpeta de OneDrive desde la app Archivos.' : 'Respaldo listo.';
+    },
+    exportCSV: async tipo => {
+      const nombre = id => (db.parcelas.find(p => p.id === id) || {}).nombre || 'Rancho (general)';
+      const parcelaOf = id => db.parcelas.find(p => p.id === id);
+      let rows, file;
+      if (tipo === 'finanzas') {
+        file = 'Finanzas';
+        rows = [['Fecha', 'Parcela', 'Origen', 'Tipo', 'Categoría', 'Concepto', 'Proveedor/Bodega/Comprador', 'Monto MXN']];
+        const all = [
+          ...db.movs.map(m => ({ f: m.fecha, r: [m.fecha, nombre(m.parcelaId), 'Manual', m.tipo === 'gasto' ? 'Gasto' : 'Ingreso', m.cat, m.concepto, m.tercero, m.monto.toFixed(2)] })),
+          ...db.riegos.filter(r => num(r.costo) > 0).map(r => ({ f: r.fecha, r: [r.fecha, nombre(r.parcelaId), 'Riego', 'Gasto', CAT_RIEGO, `${r.numero} (${r.costoTipo})`, r.fuente, num(r.costo).toFixed(2)] })),
+          ...db.cosechas.map(b => ({ f: b.fecha, r: [b.fecha, nombre(b.parcelaId), 'Cosecha', 'Ingreso', CATS_INGRESO[0], `Boleta ${b.folio || ''}`.trim(), '', boleta(b).ingreso.toFixed(2)] })),
+        ].sort((a, b) => a.f.localeCompare(b.f));
+        all.forEach(x => rows.push(x.r));
+      } else if (tipo === 'riegos') {
+        file = 'Riegos';
+        rows = [['Fecha', 'Parcela', 'Riego', 'Fuente de agua', 'Horas', 'Gasto', 'Unidad gasto', 'Volumen m3', 'Lámina cm', 'Costo MXN', 'Tipo de costo', 'Notas']];
+        [...db.riegos].sort((a, b) => a.fecha.localeCompare(b.fecha)).forEach(r => rows.push([r.fecha, nombre(r.parcelaId), r.numero, r.fuente, r.horas, r.gasto, r.unidad === 'm3/h' ? 'm3/h' : 'L/s', has(r.gasto) ? volumenM3(r).toFixed(1) : '', r.lamina, num(r.costo).toFixed(2), r.costoTipo, r.notas]));
+      } else if (tipo === 'cosecha') {
+        file = 'Cosecha';
+        rows = [['Fecha', 'Parcela', 'Folio', 'Peso bruto kg', 'Peso neto kg', 'Humedad %', 'Impurezas %', 'Base humedad %', 'Base impurezas %', 'Desc. humedad kg', 'Desc. impurezas kg', 'Toneladas comerciales', 'Precio $/ton', 'Ingreso MXN']];
+        [...db.cosechas].sort((a, b) => a.fecha.localeCompare(b.fecha)).forEach(b => { const r = boleta(b); rows.push([b.fecha, nombre(b.parcelaId), b.folio, b.bruto, b.neto, b.humedad, b.impurezas, b.hBase, b.iBase, r.kgH.toFixed(1), r.kgI.toFixed(1), r.ton.toFixed(3), b.precio, r.ingreso.toFixed(2)]); });
+      } else if (tipo === 'labores') {
+        file = 'Labores';
+        rows = [['Fecha', 'Parcela', 'DDS', 'Labor', 'Producto', 'Dosis', 'Clima', 'Notas']];
+        [...db.labores].sort((a, b) => a.fecha.localeCompare(b.fecha)).forEach(l => { const p = parcelaOf(l.parcelaId); rows.push([l.fecha, nombre(l.parcelaId), p && p.siembra ? daysFrom(p.siembra) - daysFrom(l.fecha) : '', l.labor, l.producto, l.dosis, l.clima, l.notas]); });
+      } else {
+        file = 'Parcelas';
+        rows = [['Parcela', 'Superficie ha', 'Cultivo', 'Variedad', 'Tipo de suelo', 'Siembra', 'DDS', 'Etapa', 'Gastos MXN', 'Ingresos MXN', 'Balance MXN', 'Costo MXN/ha', 'Toneladas comerciales', 'Rendimiento t/ha', 'Costo MXN/ton', 'Utilidad MXN/ha']];
+        db.parcelas.forEach(p => { const s = fin(db, p); rows.push([p.nombre, num(p.sup), p.cultivo, p.variedad, p.suelo, p.siembra, ddsOf(p) ?? '', p.fase, s.g.toFixed(2), s.i.toFixed(2), s.b.toFixed(2), s.cha === null ? '' : s.cha.toFixed(2), s.ton.toFixed(3), s.rend === null ? '' : s.rend.toFixed(2), s.costTon === null ? '' : s.costTon.toFixed(2), s.utilHa === null ? '' : s.utilHa.toFixed(2)]); });
+      }
+      const r = await saveFile(`${file}_${todayStr()}.csv`, toCSV(rows), 'text/csv', 'download');
+      return r === 'cancel' ? 'Cancelado.' : r === 'fail' ? 'No se pudo generar el archivo en este navegador.' : 'Reporte listo.';
+    },
+    askRestore: (data, name) => setModal({ k: 'restore', data, name }),
+  };
+  const doRestore = data => {
+    try { localStorage.setItem(KEY_PREV, JSON.stringify(db)); } catch (e) {}
+    setDb({ ...data });
+    setModal(null); setTab('resumen');
+  };
+
+  const tabs = [['resumen', 'LayoutDashboard', 'Resumen'], ['finanzas', 'Wallet', 'Finanzas'], ['riego', 'Droplets', 'Riego/Labores'], ['cosecha', 'Wheat', 'Cosecha'], ['mas', 'Ellipsis', 'Más']];
+  const titles = { resumen: 'Resumen', finanzas: 'Finanzas', riego: 'Riego y labores', cosecha: 'Cosecha', mas: mas === 'parcelas' ? 'Parcelas' : mas === 'papelera' ? 'Papelera' : 'Respaldo / OneDrive' };
+  const showSel = !(tab === 'mas' && mas !== 'parcelas');
+  const defParcela = sel !== 'all' ? sel : '';
+
+  return (
+    <div className="max-w-md mx-auto min-h-screen">
+      <header className="safe-top px-4 pb-3 sticky top-0 z-30 bg-stone-100/95 dark:bg-stone-950/95 backdrop-blur border-b-[2.5px] border-stone-900 dark:border-stone-600">
+        <div className="flex items-center gap-3">
+          <div className="btn3d-sm h-12 w-12 shrink-0 rounded-xl bg-amber-400 text-stone-900 border-[2.5px] border-stone-900 dark:border-black flex items-center justify-center"><Icon n="Sprout" size={26} stroke={2.4} /></div>
+          <h1 className="flex-1 min-w-0 text-[30px] leading-none font-bold truncate">{titles[tab]}</h1>
+          <button onClick={() => setDark(!dark)} className={iconBtn} aria-label="Cambiar tema"><Icon n={dark ? 'Sun' : 'Moon'} size={20} /></button>
+        </div>
+        {showSel && (
+          <div className="flex gap-2 overflow-x-auto noscrollbar mt-3 pb-1.5 -mx-4 px-4">
+            <Chip active={sel === 'all'} onClick={() => setSel('all')}>General</Chip>
+            {db.parcelas.map(p => <Chip key={p.id} active={sel === p.id} onClick={() => setSel(p.id)}>{p.nombre}</Chip>)}
+          </div>
+        )}
+      </header>
+
+      <main className="px-4 pt-4 pb-36">
+        {!storageOk && <div className="mb-4 p-3 rounded-2xl bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 text-sm font-semibold">Este navegador no permite guardar datos. Exporta tu respaldo con frecuencia.</div>}
+        {tab === 'resumen' && <Resumen db={db} view={view} setSel={setSel} goTab={goTab} onClearDemo={clearDemo} />}
+        {tab === 'finanzas' && <Finanzas db={db} view={view} askTrash={askTrash} openNew={() => setModal({ k: 'mov' })} />}
+        {tab === 'riego' && <RiegoLabores db={db} view={view} askTrash={askTrash} openRiego={() => setModal({ k: 'riego' })} openLabor={() => setModal({ k: 'labor' })} />}
+        {tab === 'cosecha' && <Cosecha db={db} view={view} askTrash={askTrash} openNew={() => setModal({ k: 'cosecha' })} />}
+        {tab === 'mas' && (
+          <div className="space-y-4">
+            <Seg value={mas} onChange={setMas} options={[['parcelas', 'Parcelas', 'Sprout'], ['papelera', `Papelera${db.papelera.length ? ' (' + db.papelera.length + ')' : ''}`, 'Trash2'], ['respaldo', 'Respaldo', 'Cloud']]} />
+            {mas === 'parcelas' && <Parcelas db={db} setSel={setSel} goTab={goTab} openEdit={p => setModal({ k: 'parcela', p })} askTrashParcela={askTrashParcela} />}
+            {mas === 'papelera' && <Papelera db={db} setDb={setDb} askConfirm={askConfirm} restore={restore} />}
+            {mas === 'respaldo' && <Respaldo db={db} backup={backup} />}
+          </div>
+        )}
+      </main>
+
+      <nav className="fixed bottom-0 inset-x-0 z-40 bg-stone-100 dark:bg-stone-900 border-t-[2.5px] border-stone-900 dark:border-stone-600 safe-bottom">
+        <div className="max-w-md mx-auto grid grid-cols-5 gap-1 px-1.5 pt-2">
+          {tabs.map(([id, ic, label]) => (
+            <button key={id} onClick={() => goTab(id)}
+              className={'relative h-[60px] rounded-xl flex flex-col items-center justify-center gap-1 text-[10px] tracking-tight leading-none font-extrabold border-[2.5px] ' +
+                (tab === id ? (id === 'riego' ? 'bg-sky-700 text-white' : 'bg-amber-400 text-stone-900') + ' border-stone-900 dark:border-black btn3d-sm' : 'border-transparent text-stone-700 dark:text-stone-300')}>
+              <Icon n={ic} size={24} stroke={tab === id ? 2.5 : 2} />{label}
+              {id === 'mas' && db.papelera.length > 0 && <span className="absolute -top-1.5 right-1 min-w-[20px] h-5 px-1 rounded-full bg-red-600 text-white border-2 border-stone-900 dark:border-black text-[11px] flex items-center justify-center">{db.papelera.length}</span>}
+            </button>
+          ))}
+        </div>
+      </nav>
+
+      {modal && modal.k === 'parcela' && (
+        <ParcelaSheet parcela={modal.p} onClose={() => setModal(null)} onSave={p => {
+          setDb(d => modal.p ? { ...d, parcelas: d.parcelas.map(x => x.id === p.id ? p : x) } : { ...d, parcelas: [...d.parcelas, p], sel: p.id });
+          setModal(null);
+        }} />
+      )}
+      {modal && modal.k === 'mov' && <MovSheet db={db} defaultParcela={sel !== 'all' ? sel : (db.parcelas[0] ? db.parcelas[0].id : '')} onClose={() => setModal(null)} onSave={m => { setDb(d => ({ ...d, movs: [...d.movs, m] })); setModal(null); }} />}
+      {modal && modal.k === 'labor' && <LaborSheet db={db} defaultParcela={defParcela} onClose={() => setModal(null)} onSave={l => { setDb(d => ({ ...d, labores: [...d.labores, l] })); setModal(null); }} />}
+      {modal && modal.k === 'riego' && <RiegoSheet db={db} defaultParcela={defParcela} onClose={() => setModal(null)} onSave={r => { setDb(d => ({ ...d, riegos: [...d.riegos, r] })); setModal(null); }} />}
+      {modal && modal.k === 'cosecha' && <CosechaSheet db={db} defaultParcela={defParcela} onClose={() => setModal(null)} onSave={b => { setDb(d => ({ ...d, cosechas: [...d.cosechas, b] })); setModal(null); }} />}
+      {modal && modal.k === 'confirm' && (
+        <Sheet title={modal.title} onClose={() => setModal(null)}>
+          <p className="mb-5 text-stone-700 dark:text-stone-300 font-medium">{modal.text}</p>
+          <div className="space-y-3">
+            <button onClick={() => { modal.onYes(); setModal(null); }} className={modal.safe ? btnPrimary : btnDanger}>{modal.yes}</button>
+            <button onClick={() => setModal(null)} className={btnGhost}>Cancelar</button>
+          </div>
+        </Sheet>
+      )}
+      {modal && modal.k === 'restore' && (
+        <Sheet title="¿Cargar respaldo?" onClose={() => setModal(null)}>
+          <p className="font-bold mb-1 break-words">{modal.name}</p>
+          <p className="mb-3 text-stone-700 dark:text-stone-300">Contiene {modal.data.parcelas.length} parcelas, {modal.data.movs.length} movimientos, {modal.data.riegos.length} riegos, {modal.data.cosechas.length} boletas y {modal.data.labores.length} labores.</p>
+          <p className="mb-5 text-stone-700 dark:text-stone-300 font-medium">Esto reemplazará todos los datos actuales de este dispositivo. Se conserva una copia de seguridad temporal de lo actual.</p>
+          <div className="space-y-3">
+            <button onClick={() => doRestore(modal.data)} className={btnDanger}>Sí, reemplazar con el respaldo</button>
+            <button onClick={() => setModal(null)} className={btnGhost}>Cancelar</button>
+          </div>
+        </Sheet>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
